@@ -4,6 +4,7 @@
 
 const D = window.SITE, I = window.ICONS;
 const projects = D.projects;
+const outputs = [...new Set(projects.map(p => p.output).filter(Boolean))];
 const skillById = Object.fromEntries(D.skills.map(s => [s.id, s]));
 const catById = Object.fromEntries(D.categories.map(c => [c.id, c]));
 const projById = Object.fromEntries(projects.map(p => [p.id, p]));
@@ -123,11 +124,12 @@ window.addEventListener('scroll', hideTip, {passive: true});
 
 /* clicks on tags / chips / cards are delegated once */
 let lastSkills = [], pendingScroll = null;
-function buildHash({cat, shelf, skills}) {
+function buildHash({cat, shelf, skills, out}) {
   const s = (skills || []).join(',');
-  if (cat) return s ? `#/cat/${cat}/skill/${s}` : `#/cat/${cat}`;
-  if (shelf) return s ? `#/shelf/skill/${s}` : '#/shelf';
-  return s ? `#/skill/${s}` : '#/';
+  const q = out ? `?out=${encodeURIComponent(out)}` : '';
+  if (cat) return (s ? `#/cat/${cat}/skill/${s}` : `#/cat/${cat}`) + q;
+  if (shelf) return (s ? `#/shelf/skill/${s}` : '#/shelf') + q;
+  return (s ? `#/skill/${s}` : '#/') + q;
 }
 document.addEventListener('click', e => {
   const tag = e.target.closest('.tag[data-skill]');
@@ -138,7 +140,7 @@ document.addEventListener('click', e => {
     const id = tag.dataset.skill;
     if (sel.has(id)) sel.delete(id); else sel.add(id);
     pendingScroll = window.scrollY;
-    go(buildHash({cat: cur.cat, shelf: cur.shelf, skills: [...sel]}));
+    go(buildHash({cat: cur.cat, shelf: cur.shelf, skills: [...sel], out: cur.out}));
     return;
   }
   const unskill = e.target.closest('[data-unskill]');
@@ -146,13 +148,22 @@ document.addEventListener('click', e => {
     const cur = parseHash();
     pendingScroll = window.scrollY;
     go(buildHash({cat: cur.cat, shelf: cur.shelf,
-      skills: lastSkills.filter(x => x !== unskill.dataset.unskill)}));
+      skills: lastSkills.filter(x => x !== unskill.dataset.unskill), out: cur.out}));
+    return;
+  }
+  const outChip = e.target.closest('[data-out]');
+  if (outChip) {
+    const id = outChip.dataset.out, cur = parseHash();
+    go(buildHash({cat: cur.cat, shelf: cur.shelf, skills: lastSkills,
+      out: cur.out === id ? null : id}));
     return;
   }
   const chip = e.target.closest('[data-cat]');
   if (chip) {
     const id = chip.dataset.cat, cur = parseHash();
-    go(buildHash({cat: cur.cat === id ? null : id, skills: lastSkills}));
+    /* any package change drops the previous package's skill picks —
+       the shelf only ever shows the current package's skills */
+    go(buildHash({cat: cur.cat === id ? null : id, skills: [], out: cur.out}));
     return;
   }
   const clear = e.target.closest('[data-clear]');
@@ -169,7 +180,7 @@ document.addEventListener('click', e => {
   if (shelfBtn) {
     e.preventDefault();
     const cur = parseHash();
-    go(buildHash({shelf: !cur.shelf, skills: lastSkills}));
+    go(buildHash({shelf: !cur.shelf, skills: lastSkills, out: cur.out}));
     return;
   }
   const navSkills = e.target.closest('[data-nav="skills"]');
@@ -186,26 +197,32 @@ document.addEventListener('keydown', e => {
 
 /* ------------------------------------------------------------ routing --- */
 function parseHash() {
-  const raw = location.hash.replace(/^#\/?/, '');
+  const rawFull = location.hash.replace(/^#\/?/, '');
+  const qi = rawFull.indexOf('?');
+  const raw = qi < 0 ? rawFull : rawFull.slice(0, qi);
   const parts = raw.split('/').filter(Boolean);
+  const st0 = {};
+  if (qi >= 0) for (const kv of rawFull.slice(qi + 1).split('&')) {
+    const [k, v] = kv.split('=');
+    if (k === 'out' && v) st0.out = decodeURIComponent(v);
+  }
   if (parts[0] === 'p' && parts[1]) return {view: 'detail', id: parts[1]};
   if (parts[0] === 'certs') return {view: 'certs'};
   if (parts[0] === 'about') return {view: 'about'};
   if (parts[0] === 'contact') return {view: 'contact'};
-  if (parts[0] === 'skill' && parts[1]) return {view: 'home', skills: parts[1].split(',').filter(Boolean)};
+  if (parts[0] === 'skill' && parts[1]) return Object.assign(st0, {view: 'home', skills: parts[1].split(',').filter(Boolean)});
   if (parts[0] === 'cat' && parts[1]) {
-    const st = {view: 'home', cat: parts[1]};
+    const st = Object.assign(st0, {view: 'home', cat: parts[1]});
     if (parts[2] === 'skill' && parts[3]) st.skills = parts[3].split(',').filter(Boolean);
     return st;
   }
   if (parts[0] === 'shelf') {
-    const st = {view: 'home', shelf: true};
+    const st = Object.assign(st0, {view: 'home', shelf: true});
     if (parts[1] === 'skill' && parts[2]) st.skills = parts[2].split(',').filter(Boolean);
     return st;
   }
-  if (parts[0] === 'q') return {view: 'home', q: decodeURIComponent(parts.slice(1).join('/') || '')};
-  if (parts[0] === 'shelf') return {view: 'home', shelf: true};
-  return {view: 'home'};
+  if (parts[0] === 'q') return Object.assign(st0, {view: 'home', q: decodeURIComponent(parts.slice(1).join('/') || '')});
+  return Object.assign(st0, {view: 'home'});
 }
 function go(hash) {
   if (location.hash === hash) render();
@@ -215,8 +232,11 @@ function go(hash) {
 /* -------------------------------------------------------------- filter --- */
 function filtered(state) {
   let list = projects.slice();
+  if (state.cat)
+    list = list.filter(p => p.skills.some(id => skillById[id]?.cat === state.cat));
   if (state.skills && state.skills.length)
     list = list.filter(p => state.skills.some(id => p.skills.includes(id)));
+  if (state.out) list = list.filter(p => p.output === state.out);
   if (state.q) {
     const q = state.q.toLowerCase();
     list = list.filter(p => (p.name + ' ' + p.desc + ' ' + p.skills.map(id => skillById[id]?.name).join(' ')).toLowerCase().includes(q));
@@ -238,9 +258,6 @@ function renderHome(state) {
     const s = skillById[id];
     return s && s.cat === pkg && (!g || s.grp === g);
   })).length;
-
-  const railTags = [...D.skills, ...D.skills].map(s =>
-    `<span class="tag" style="--h:${skillColor(s)}"><span class="face">${icon(s.icon)}<span>${esc(s.name)}</span></span></span>`).join('');
 
   const shelf = `<section class="wrap" aria-label="All skills">
     <div class="skill-shelf${(state.shelf || cat) ? ' open' : ''}" id="shelf"><div class="shelf-inner">
@@ -286,9 +303,10 @@ function renderHome(state) {
     </article>`;
   }).join('');
 
-  const active = skills.length || state.q;
+  const active = state.cat || skills.length || state.out || state.q;
   const activeChips = skills.map(s =>
     `<span class="active-filter" style="--h:${skillColor(s)}">${esc(s.name)} <button type="button" class="x" data-unskill="${s.id}" aria-label="Remove ${esc(s.name)} filter">×</button></span>`).join('')
+    + (state.out ? `<span class="active-filter" style="--h:#8d939d">${esc(state.out)} <button type="button" class="x" data-out="${esc(state.out)}" aria-label="Remove output filter">×</button></span>` : '')
     + (state.q ? `<span class="active-filter">search: ${esc(state.q)} <button type="button" class="x" data-clear aria-label="Clear search">×</button></span>` : '');
 
   app.innerHTML = `
@@ -297,8 +315,9 @@ function renderHome(state) {
     <h1 class="hero-title"><span class="g" data-text="Works">Works</span> <span class="hero-amp">&amp;</span><br><span class="g" data-text="Internships">Internships</span></h1>
     <p class="hero-sub">Eleven builds — six applications, three platforms, two internships — kept together with
       the evidence behind every claim. <b>Pick the package you are hiring for</b> — fullstack, AI, cloud,
-      security, networks — its skills open beneath it, grouped by discipline. Tap the skills you need: every
-      tap keeps the ones before it, and the works show every build that uses any of them.</p>
+      security, networks — its skills open beneath it, grouped by discipline, and the works narrow to its
+      builds. Tap the skills you need: every tap keeps the ones before it, and the works show the package's
+      builds that use any of them. Switching package starts the picks fresh.</p>
     <div class="hero-meta">
       <div><b>${total}</b>works</div>
       <div><b>${D.skills.length}</b>skills</div>
@@ -307,13 +326,11 @@ function renderHome(state) {
     </div>
   </section>
 
-  <div class="rail" aria-hidden="true"><div class="rail-track">${railTags}</div></div>
-
   <section class="filters" id="filters">
     <div class="wrap">
       <div class="filters-row">
         <span class="filters-lead">Filter</span>
-        <button type="button" class="chip${!skills.length && !state.q ? ' on' : ''}" data-clear style="--h:#8d939d" aria-pressed="${!skills.length && !state.q}">
+        <button type="button" class="chip${!state.cat && !skills.length && !state.out && !state.q ? ' on' : ''}" data-clear style="--h:#8d939d" aria-pressed="${!state.cat && !skills.length && !state.out && !state.q}">
           <span class="face">All<span class="n">${total}</span></span></button>
         ${cats.map(c => catChip(c, {on: cat === c, count: countIn(c.id)})).join('')}
         <label class="search">
@@ -322,6 +339,11 @@ function renderHome(state) {
         </label>
         <button type="button" class="chip${state.shelf ? ' on' : ''}" data-shelf style="--h:#ffd23f" aria-expanded="${!!state.shelf}" aria-controls="shelf">
           <span class="face">All skills <span class="n">${D.skills.length}</span></span></button>
+      </div>
+      <div class="filters-row" style="margin-top:12px">
+        <span class="filters-lab">Output</span>
+        ${outputs.map(o => `<button type="button" class="chip${state.out === o ? ' on' : ''}" data-out="${esc(o)}" style="--h:#8d939d" aria-pressed="${state.out === o}">
+          <span class="face">${esc(o)}<span class="n">${projects.filter(p => p.output === o).length}</span></span></button>`).join('')}
       </div>
       ${active ? `<div class="filters-row" style="margin-top:12px">
         <span class="results-count"><b>${list.length}</b> ${list.length === 1 ? 'work' : 'works'}</span>
@@ -400,12 +422,20 @@ function actionsMarkup(p) {
   const out = [];
   if (p.sample) {
     const dl = `https://drive.google.com/uc?export=download&id=${p.sample.id}`;
+    const label = /\.ipynb$/i.test(p.sample.name) ? 'Download notebook' : 'Download sample';
     out.push(`<a class="btn btn-accent cut cut-4" href="${dl}" target="_blank" rel="noopener">
-      <span class="face">Download notebook <span class="arr">↓</span></span></a>`);
+      <span class="face">${label} <span class="arr">↓</span></span></a>`);
   }
   if (p.links && p.links.drive) out.push(`<a class="btn cut cut-4" href="${p.links.drive}" target="_blank" rel="noopener"><span class="face">Drive folder <span class="arr">↗</span></span></a>`);
-  if (p.links && p.links.repo) out.push(`<a class="btn cut cut-4" href="${p.links.repo}" target="_blank" rel="noopener"><span class="face">Repository <span class="arr">↗</span></span></a>`);
-  if (p.links && p.links.site) out.push(`<a class="btn cut cut-4" href="${p.links.site}" target="_blank" rel="noopener"><span class="face">Live site <span class="arr">↗</span></span></a>`);
+  if (p.links && p.links.repo) out.push(`<a class="btn btn-ico cut cut-4" href="${p.links.repo}" target="_blank" rel="noopener" aria-label="Repository" title="Repository">
+    <span class="face">${icon('brand:github')}</span></a>`);
+  if (p.links && p.links.site) {
+    if (p.links.site.includes('zenodo.org/records/')) out.push(`<a class="btn btn-ico cut cut-4" href="${p.links.site}" target="_blank" rel="noopener" aria-label="Zenodo" title="Zenodo record">
+      <span class="face"><img src="assets/logos/zenodo-ze.png" alt=""></span></a>`);
+    else out.push(`<a class="btn cut cut-4" href="${p.links.site}" target="_blank" rel="noopener"><span class="face">Live site <span class="arr">↗</span></span></a>`);
+  }
+  if (p.links && p.links.rg) out.push(`<a class="btn btn-ico cut cut-4" href="${p.links.rg}" target="_blank" rel="noopener" aria-label="ResearchGate" title="ResearchGate publication">
+    <span class="face">${icon('brand:researchgate')}</span></a>`);
   return out.join('');
 }
 
@@ -613,10 +643,8 @@ function contactBlock() {
 
 /* ---------------------------------------------------------------- about --- */
 const EDU = [
-  ['ESI Rabat', 'Engineering degree — Information Systems Security &amp; Cybersecurity (ISSIC)', '2024 → expected July 2027',
-   'Coursework beyond the works: switched &amp; routed network design on EVE-NG (VLANs, L2/L3 labs), Kali security labs, French technical reporting.'],
-  ['Lycée Ben Abdoun, Rabat', 'Classes préparatoires aux grandes écoles — MPSI / MP', 'Sept 2022 → June 2024',
-   'Python and algorithmic problem solving.'],
+  ['ESI Rabat', 'Engineering degree — Information Systems Security &amp; Cybersecurity (ISSIC)', '2024 → expected July 2027'],
+  ['Lycée Ben Abdoun, Rabat', 'Classes préparatoires aux grandes écoles — MPSI / MP', 'Sept 2022 → June 2024'],
 ];
 
 function renderAbout() {
@@ -638,11 +666,9 @@ function renderAbout() {
   const cwBlock = `<details class="cw-shelf">
     <summary><span class="cw-sum">ESI coursework skills</span>
       <span class="cw-sum-n">${D.coursework.length} across ${new Set(D.coursework.map(k => k.cat)).size} packages</span>
-      <span class="cw-gpa">15.11 / 20 · GPA 3.0 / 4</span></summary>
-    <p class="cw-lead">Skills from the ESI curriculum, in the shelf's own packages. The shelf above carries
-      only what a linked work proves; what the degree taught and none of my builds demonstrate is listed
-      here instead. Marks are the S1–S4 cumulative from the transcript.</p>
-    ${cwRows}
+      <span class="cw-gpa" title="Cumulative GPA 3.0 / 4 — 75th percentile">
+        <span class="gpa-ring" style="--p:75" aria-hidden="true"><b>3.0</b><i>GPA</i></span></span></summary>
+    <div class="cw-body"><div class="cw-inner">${cwRows}</div></div>
   </details>`;
 
   app.innerHTML = `
@@ -731,6 +757,29 @@ function renderAbout() {
   </article>`;
 
   requestAnimationFrame(() => app.querySelector('.g')?.classList.add('on'));
+  app.querySelectorAll('details.cw-shelf').forEach(bindShelfAnim);
+}
+
+/* animate a <details> open/close: the row-height transition needs the open
+   attribute held until the collapse finishes */
+function bindShelfAnim(d) {
+  const sum = d.querySelector('summary');
+  const body = d.querySelector('.cw-body');
+  sum.addEventListener('click', e => {
+    e.preventDefault();
+    if (d.classList.contains('open')) {
+      d.classList.remove('open');
+      const done = ev => {
+        if (ev.propertyName !== 'grid-template-rows') return;
+        body.removeEventListener('transitionend', done);
+        d.open = false;
+      };
+      body.addEventListener('transitionend', done);
+    } else {
+      d.open = true;
+      requestAnimationFrame(() => requestAnimationFrame(() => d.classList.add('open')));
+    }
+  });
 }
 
 /* --------------------------------------------------------------- contact --- */
@@ -842,6 +891,10 @@ function render() {
   else if (state.view === 'contact') renderContact();
   else if (state.view === 'detail') renderDetail(state);
   else renderHome(state);
+  /* the header museum button reads --accent outside the page shell:
+     ride it on the work's own hue while a detail page is open */
+  const dp = state.view === 'detail' && projById[state.id];
+  document.documentElement.style.setProperty('--accent', dp ? accent(dp) : '');
   if (pendingScroll != null) { window.scrollTo(0, pendingScroll); pendingScroll = null; }
   else window.scrollTo({top: 0, behavior: 'instant' in window ? 'instant' : 'auto'});
 }
