@@ -161,12 +161,16 @@ function initRenderer() {
     fatal('This experience needs WebGL. ' + e.message);
     return false;
   }
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  /* The HUD is DOM, so it stays crisp whatever the rasteriser is capped at; this
+     only ever limits the WebGL fill rate, which on a dpr-3 phone is the whole
+     bill. */
+  const dprCap = window.matchMedia('(pointer: coarse)').matches ? 1.6 : 2;
+  const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   renderer.setPixelRatio(dpr);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = TONE.exposure;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   dom.stage.appendChild(renderer.domElement);
@@ -177,22 +181,26 @@ function initRenderer() {
   const gpu = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : '';
   const liteGpu = /swiftshader|software\s*mesa|basic\s*render|llvmpipe/i.test(gpu);
   const q = window.location.search;
-  lowPerf = !/[?&]full\b/.test(q) && (liteGpu || /[?&]lite\b/.test(q));
+  /* A phone is not a slow PC by name — it is a small fill-rate budget with a
+     touch pointer on it. Coarse pointers take the light hang: no mirror floor,
+     half the shadow map, smaller canvases. ?full forces the desktop rig. */
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  lowPerf = !/[?&]full\b/.test(q) && (liteGpu || coarse || /[?&]lite\b/.test(q));
   return true;
 }
 
 function initScene() {
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x8a8071, 0.0068);
+  scene.fog = new THREE.FogExp2(TONE.fog, TONE.fogDensity);
   camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 140);
   scene.environment = M.makeEnvironment(renderer);
 }
 
 function initLights() {
-  scene.add(new THREE.HemisphereLight(0xfff2dd, 0xa8957a, 1.5));
+  scene.add(new THREE.HemisphereLight(TONE.hemiSky, TONE.hemiGround, TONE.hemiIntensity));
 
   /* soft daylight through the skylight slot — the room's only shadow caster */
-  sun = new THREE.DirectionalLight(0xfff2dc, 1.5);
+  sun = new THREE.DirectionalLight(TONE.sun, 1.5);
   sun.position.set(2.5, 12, -6);
   sun.target.position.set(0, 0, -8);
   sun.castShadow = true;
@@ -213,13 +221,13 @@ function initLights() {
      Wide and edgeless on purpose: a tight cone reads as a stage spot, not as a
      gallery fixture. */
   for (const sgn of [-1, 1]) {
-    const sp = new THREE.SpotLight(0xffd9a4, 0, 10.5, 0.86, 1, 1.2);
+    const sp = new THREE.SpotLight(TONE.spot, 0, 10.5, 0.86, 1, 1.2);
     sp.position.set(sgn * (ROOM.halfW - 1.35), 3.7, -8);
     scene.add(sp, sp.target);
     spots.push({ light: sp, side: sgn, weight: 0.2 });
   }
 
-  const fill = new THREE.PointLight(0xffd8a8, 14, 24, 2);
+  const fill = new THREE.PointLight(TONE.fill, 14, 24, 2);
   fill.position.set(0, 2.8, ROOM.zBack + 4.5);
   scene.add(fill);
 }
@@ -582,7 +590,8 @@ const GradeShader = {
     uScreenSize: { value: new THREE.Vector2(1, 1) },
     uTime: { value: 0 },
     uVignette: { value: 0.32 },
-    uGrain: { value: 0.013 }
+    uGrain: { value: 0.013 },
+    uCool: { value: 0 }
   },
   vertexShader: `
     varying vec2 vUvGrade;
@@ -593,7 +602,7 @@ const GradeShader = {
   fragmentShader: `
     uniform sampler2D tDiffuse;
     uniform vec2 uScreenSize;
-    uniform float uTime, uVignette, uGrain;
+    uniform float uTime, uVignette, uGrain, uCool;
     varying vec2 vUvGrade;
 
     float hash12( vec2 p ) {
@@ -609,8 +618,13 @@ const GradeShader = {
 
       /* gentle filmic S-curve; keep shadow detail, roll the highlights */
       c = mix( c, c * c * ( 3.0 - 2.0 * c ), 0.16 );
-      c = mix( c, c * vec3( 1.03, 1.008, 0.972 ), 0.6 );   /* warm bias */
-      c *= vec3( 1.0, 0.996, 0.988 ) + ( 1.0 - lum ) * vec3( -0.035, -0.012, 0.028 );
+      /* the hung room is graded warm; ?skin=grade runs the same curve the other
+         way, so the plaster reads as slate under the same light rig */
+      vec3 bias = mix( vec3( 1.03, 1.008, 0.972 ), vec3( 0.935, 0.99, 1.075 ), uCool );
+      c = mix( c, c * bias, mix( 0.6, 0.78, uCool ) );
+      vec3 base = mix( vec3( 1.0, 0.996, 0.988 ), vec3( 0.985, 0.995, 1.022 ), uCool );
+      vec3 lift = mix( vec3( -0.035, -0.012, 0.028 ), vec3( -0.032, -0.002, 0.05 ), uCool );
+      c *= base + ( 1.0 - lum ) * lift;
 
       vec2 q = ( vUvGrade - 0.5 ) * vec2( uScreenSize.x / max( 1.0, uScreenSize.y ), 1.0 );
       c *= 1.0 - uVignette * pow( clamp( length( q ) * 1.42, 0.0, 1.0 ), 2.3 );
@@ -634,6 +648,9 @@ function initPost() {
      display-referred data, and FXAA on linear HDR fringes cyan at edges */
   composer.addPass(new THREE.OutputPass());
   gradePass = new THREE.ShaderPass(GradeShader);
+  gradePass.material.uniforms.uVignette.value = TONE.vignette;
+  gradePass.material.uniforms.uCool.value = TONE.cool;
+  gradePass.material.uniforms.uGrain.value = TONE.grain;
   composer.addPass(gradePass);
   fxaa = new THREE.ShaderPass(THREE.FXAAShader);
   composer.addPass(fxaa);
@@ -642,7 +659,8 @@ function initPost() {
 
 function applySize() {
   const w = window.innerWidth, h = window.innerHeight;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dprCap = window.matchMedia('(pointer: coarse)').matches ? 1.6 : 2;
+  const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   renderer.setPixelRatio(dpr);
   renderer.setSize(w, h);
   if (composer) composer.setSize(w, h);
@@ -725,20 +743,30 @@ function updateCaption() {
     const hex = '#' + w.accent.toString(16).padStart(6, '0');
     cap.style.setProperty('--accent', hex);
     cap.style.setProperty('--cut', CUT + 'px');
-    cap.querySelector('.sheet').style.clipPath = cutPath(w.cuts, CUT);
+    /* the same hue carries the chrome outside the card — the progress hairline,
+       the veil glow — the way a detail page's accent scopes the whole portfolio
+       header. The plate's own --accent stays on `cap`, so a card mid-walk cannot
+       inherit from another. */
+    document.documentElement.style.setProperty('--accent', hex);
+    /* the frame and the glass take the same silhouette: the clip runs through
+       both layers, so the 1px edge survives the chamfer as a lit diagonal */
+    const shape = cutPath(w.cuts, CUT);
+    cap.querySelector('.plate').style.clipPath = shape;
+    cap.querySelector('.sheet').style.clipPath = shape;
     cap.querySelector('.neon').innerHTML = lightCorners(w.cuts);
     cap.querySelector('.logo').style.clipPath = cutPath(w.cuts, 13);
     cap.querySelector('.logo').classList.toggle('flat', !!w.flat);
     const img = cap.querySelector('.logo img');
     img.src = w.logo;
     img.alt = w.name + ' logo';
-    cap.querySelector('.n').textContent =
-      w.kind === 'stage' ? 'Internship · ' + w.org : 'Personal project';
     cap.querySelector('h1').textContent = w.name;
     cap.querySelector('p').textContent = w.desc;
     cap.querySelector('.t').textContent =
       'No. ' + String(paintings.indexOf(e) + 1).padStart(2, '0') +
       ' · ' + e.title + ' · ' + e.artist + ' · ' + e.year;
+    /* the framed output label, the dossier and the colour menu are the HUD's
+       business — it reads the same entry, and works.js holds its copy */
+    if (window.MuseumHud) window.MuseumHud.onFocus(e);
   }
   dom.cap.classList.add('on');
 }
@@ -780,7 +808,7 @@ function setBleach(t) {
   }
   /* the frame opens as the field goes white: a dark vignette over a plain of
      plaster is a hole. The plate turns over to ink at the same crossing. */
-  gradePass.material.uniforms.uVignette.value = 0.32 * (1 - t * 0.75);
+  gradePass.material.uniforms.uVignette.value = TONE.vignette * (1 - t * 0.75);
   document.body.classList.toggle('bleached', t > 0.55);
 }
 
@@ -801,6 +829,10 @@ function updateHud() {
   dom.bar.firstElementChild.style.width = (scrollP * 100).toFixed(1) + '%';
   dom.title.style.opacity = scrollP < 0.012 ? 1 : 0;
   dom.end.style.opacity = scrollP > 0.986 ? 1 : 0;
+  /* the plates fade on their own, but their buttons must not stay clickable
+     while invisible — pointer-events on a child outranks none on the parent */
+  dom.title.classList.toggle('live', scrollP < 0.012);
+  dom.end.classList.toggle('live', scrollP > 0.986);
   /* the scrim is what keeps the plate legible on a dark room; the coda lifts it
      as the same beat bleaches the plaster to white */
   dom.veil.style.opacity = scrollP > 0.92
@@ -822,6 +854,9 @@ function loop() {
   Glitch.tick(performance.now() * 0.001, stillFrames);
   if (mirror && frames % 2 === 1) renderMirrorPass();
   composer.render(dt);
+  /* an artwork copy is grabbed here and nowhere else: the drawing buffer is only
+     readable inside the frame that wrote it */
+  if (window.MuseumHud) window.MuseumHud.maybeCapture();
   updateHud();
   frames++;
 
@@ -865,6 +900,7 @@ async function boot() {
   rig.update();
   initScroll();
   dom.load.classList.add('gone');
+  if (window.MuseumHud) window.MuseumHud.booted();
   window.addEventListener('resize', applySize, { passive: true });
   loop();
 }

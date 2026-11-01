@@ -36,15 +36,20 @@ def skip(name):
 # lives in the dev layout. Flattening puts the portfolio at the root, so ../
 # would escape the site entirely and land on the account's 404.
 REWRITE = [("../index.html", "museum/index.html")]
+# The museum runs the other way round: in dev it is the root and the portfolio
+# sits under site/, so its dossier reaches into site/assets/ and its door opens on
+# site/index.html. After flattening the portfolio is the root, so both come up a
+# level -- otherwise every screenshot, logo and exit link in the gallery 404s.
+MUSEUM_REWRITE = [("site/assets/", "../assets/"), ("site/index.html", "../index.html")]
 TEXT = (".html", ".js", ".css")
 
 
-def rewrite(path):
+def rewrite(path, pairs=REWRITE):
     if path.suffix not in TEXT:
         return
     src = path.read_text(encoding="utf-8")
     out = src
-    for old, new in REWRITE:
+    for old, new in pairs:
         out = out.replace(old, new)
     if out != src:
         path.write_text(out, encoding="utf-8", newline="\n")
@@ -89,6 +94,8 @@ def main():
         rewrite(path)
     for name in MUSEUM:
         copy_into(ROOT / name, WT / "museum")
+    for path in (WT / "museum").rglob("*"):
+        rewrite(path, MUSEUM_REWRITE)
     # Without this Pages runs the tree through Jekyll, which drops
     # underscore-prefixed assets instead of serving them.
     (WT / ".nojekyll").write_text("")

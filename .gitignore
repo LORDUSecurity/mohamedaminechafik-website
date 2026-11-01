@@ -5,6 +5,7 @@ tools/*
 !tools/sitebuild/
 tools/sitebuild/*
 !tools/sitebuild/gen_data.py
+!tools/sitebuild/gen_works.py
 !tools/sitebuild/raw.json
 !tools/publish_build.py
 .publish-tmp/
