@@ -622,6 +622,20 @@ const EDU = [
 function renderAbout() {
   document.title = 'About — Portfolio';
 
+  /* graded ESI modules: the shelf's own packages and tiles, but each one is
+     paid for by a transcript mark instead of a linked work, so it cannot be
+     clicked through to a project */
+  const cwRows = D.categories.filter(c => D.coursework.some(k => k.cat === c.id))
+    .map(c => {
+      const items = D.coursework.filter(k => k.cat === c.id);
+      return `<div class="shelf-group">
+        <div class="shelf-cat" style="--h:${catColor(c)}">${esc(c.name)}<span class="cw-n">${items.length}</span></div>
+        <div class="shelf-tags">${items.map(k =>
+          `<span class="tag cw" style="--h:${catColor(c)}" title="${esc(k.module)} — ${k.mark.toFixed(2)}/20">
+            <span class="face"><span>${esc(k.name)}</span><span class="cnt">${k.mark.toFixed(2)}</span></span></span>`).join('')}
+        </div></div>`;
+    }).join('');
+
   app.innerHTML = `
   <section class="hero wrap">
     <div class="eyebrow"><i></i>about · 2026</div>
@@ -690,6 +704,11 @@ function renderAbout() {
       <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Education</h2><span class="sec-line"></span></div>
       <div class="edu">
         ${EDU.map(([w, what, when, course]) => `<div class="edu-row"><b>${w}</b><span>${what}${course ? `<em class="edu-course">${course}</em>` : ''}</span><i>${when}</i></div>`).join('')}
+      </div>
+      <div class="cw-shelf">
+        <p class="cw-lead">Graded coursework, in the shelf's own packages. A tile here is a module passed at
+          ESI with the mark beside it, not a project — the shelf above only carries what a linked work proves.</p>
+        ${cwRows}
       </div>
     </section>
 

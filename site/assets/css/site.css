@@ -433,6 +433,14 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .edu-row b{font-size:15px;color:var(--ink)}
 .edu-row span{color:var(--dim);font-size:13.5px}
 .edu-course{display:block;margin-top:6px;font-style:normal;font-size:12.5px;line-height:1.55;opacity:.72}
+.cw-shelf{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.075)}
+.cw-lead{color:var(--dim);font-size:12.5px;line-height:1.6;max-width:70ch;margin:0 0 12px}
+.cw-shelf .shelf-group{border-top-style:solid;border-top-color:rgba(255,255,255,.05)}
+.cw-n{margin-left:8px;opacity:.5}
+.tag.cw{cursor:default}
+.tag.cw>.face{color:var(--dim)}
+.tag.cw:hover{filter:none}
+.tag.cw:hover>.face{background:var(--fill,#0b0d12);color:var(--dim)}
 .edu-row i{font-style:normal;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--accent);white-space:nowrap}
 
