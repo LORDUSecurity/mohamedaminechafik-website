@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Litmus">
+  <defs>
+    <filter id="g" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#ffd400" flood-opacity="0.65"/>
+    </filter>
+  </defs>
+  <!-- the app's own /favicon.svg tile, edge to edge: the chip's clip gives the chamfer -->
+  <g filter="url(#g)">
+    <rect width="64" height="64" fill="#ffd400"/>
+    <rect x="12" y="17" width="29" height="6" rx="3" fill="#0b0a08"/>
+    <rect x="12" y="29" width="37" height="6" rx="3" fill="#0b0a08"/>
+    <rect x="12" y="41" width="21" height="6" rx="3" fill="#0b0a08"/>
+  </g>
+</svg>
