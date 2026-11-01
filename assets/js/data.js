@@ -1870,6 +1870,146 @@ window.SITE = {
    "n": 3
   }
  ],
+ "coursework": [
+  {
+   "cat": "fullstack",
+   "name": "UML & project management",
+   "module": "Management de projet SI + UML (S3)",
+   "mark": 15.6
+  },
+  {
+   "cat": "fullstack",
+   "name": "Java EE & REST back ends",
+   "module": "Java EE + Développement mobile (S4)",
+   "mark": 15.58
+  },
+  {
+   "cat": "fullstack",
+   "name": "Relational modelling & SQL",
+   "module": "Analyse et Conception des Bases de Données (S2)",
+   "mark": 15.15
+  },
+  {
+   "cat": "ai",
+   "name": "Operations research & optimisation",
+   "module": "Recherche operationnelle (S1)",
+   "mark": 16.5
+  },
+  {
+   "cat": "ai",
+   "name": "Machine learning",
+   "module": "Machine Learning (S4)",
+   "mark": 15.78
+  },
+  {
+   "cat": "ai",
+   "name": "Probability & statistics",
+   "module": "Probabilités/statistiques (S2)",
+   "mark": 15.25
+  },
+  {
+   "cat": "cloud",
+   "name": "OS internals & computer architecture",
+   "module": "Architecture des ordinateurs + SE (S1)",
+   "mark": 16.34
+  },
+  {
+   "cat": "cloud",
+   "name": "Containers & distributed systems",
+   "module": "Systèmes répartis et virtualisation (S4)",
+   "mark": 16.11
+  },
+  {
+   "cat": "cloud",
+   "name": "Linux & Windows administration",
+   "module": "Administration des systèmes d'exploitation (S3)",
+   "mark": 16.1
+  },
+  {
+   "cat": "security",
+   "name": "Identity & access management",
+   "module": "Gestion des identités (S4)",
+   "mark": 17.5
+  },
+  {
+   "cat": "security",
+   "name": "Cryptography",
+   "module": "Cryptographie (S4)",
+   "mark": 16.0
+  },
+  {
+   "cat": "security",
+   "name": "Blockchain & distributed ledgers",
+   "module": "Blockchain (S4)",
+   "mark": 15.38
+  },
+  {
+   "cat": "security",
+   "name": "Secure protocols & services",
+   "module": "Protocoles et services de sécurité (S4)",
+   "mark": 12.97
+  },
+  {
+   "cat": "security",
+   "name": "Key & certificate management",
+   "module": "Infrastructures de gestion des clés (S4)",
+   "mark": 12.8
+  },
+  {
+   "cat": "security",
+   "name": "Cyberdefence fundamentals",
+   "module": "Introduction à la cyberdéfense (S3)",
+   "mark": 12.25
+  },
+  {
+   "cat": "security",
+   "name": "Web application security",
+   "module": "Sécurité des applications web (S4)",
+   "mark": 12.0
+  },
+  {
+   "cat": "network",
+   "name": "Network fundamentals (OSI / TCP-IP)",
+   "module": "Réseaux informatiques (S1)",
+   "mark": 16.76
+  },
+  {
+   "cat": "network",
+   "name": "Router & switch administration, QoS",
+   "module": "Admin réseaux et virtualisation (S3)",
+   "mark": 14.98
+  },
+  {
+   "cat": "network",
+   "name": "DNS, DHCP, SNMP & monitoring",
+   "module": "Couches hautes et gestion de réseau (S3)",
+   "mark": 13.47
+  },
+  {
+   "cat": "languages",
+   "name": "Python",
+   "module": "Algorithmique et Programmation (S1)",
+   "mark": 18.6
+  },
+  {
+   "cat": "languages",
+   "name": "Java & object design",
+   "module": "POO / Java+ (S3)",
+   "mark": 17.5
+  },
+  {
+   "cat": "languages",
+   "name": "C / C++",
+   "module": "Algorithmique et Programmation Avancée (S2)",
+   "mark": 16.8
+  },
+  {
+   "cat": "languages",
+   "name": "PHP, HTML, CSS & JavaScript",
+   "module": "Programmation et Technologies Web (S2)",
+   "mark": 15.95
+  }
+ ],
  "contact": {
   "name": "Mohamed Amine Chafik",
   "role": "Cybersecurity engineering student · secure software developer",
