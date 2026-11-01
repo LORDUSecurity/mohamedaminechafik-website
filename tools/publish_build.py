@@ -32,6 +32,24 @@ def skip(name):
     return ".bak-" in name or name in (".git", ".publish-tmp", "node_modules")
 
 
+# The portfolio points at the museum one level up, which is where the museum
+# lives in the dev layout. Flattening puts the portfolio at the root, so ../
+# would escape the site entirely and land on the account's 404.
+REWRITE = [("../index.html", "museum/index.html")]
+TEXT = (".html", ".js", ".css")
+
+
+def rewrite(path):
+    if path.suffix not in TEXT:
+        return
+    src = path.read_text(encoding="utf-8")
+    out = src
+    for old, new in REWRITE:
+        out = out.replace(old, new)
+    if out != src:
+        path.write_text(out, encoding="utf-8", newline="\n")
+
+
 def clean(target):
     for entry in target.iterdir():
         if entry.name == ".git":
@@ -67,6 +85,8 @@ def main():
     for entry in (ROOT / "site").iterdir():
         if not skip(entry.name):
             copy_into(entry, WT)
+    for path in WT.rglob("*"):
+        rewrite(path)
     for name in MUSEUM:
         copy_into(ROOT / name, WT / "museum")
     # Without this Pages runs the tree through Jekyll, which drops
