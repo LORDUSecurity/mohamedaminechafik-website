@@ -47,6 +47,7 @@ def copy_into(src, dest):
             if not skip(entry.name):
                 copy_into(entry, out)
     else:
+        dest.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest / src.name)
 
 
