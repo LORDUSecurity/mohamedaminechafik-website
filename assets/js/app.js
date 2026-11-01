@@ -635,6 +635,15 @@ function renderAbout() {
             <span class="face"><span>${esc(k.name)}</span></span></span>`).join('')}
         </div></div>`;
     }).join('');
+  const cwBlock = `<details class="cw-shelf">
+    <summary><span class="cw-sum">ESI coursework skills</span>
+      <span class="cw-sum-n">${D.coursework.length} across ${new Set(D.coursework.map(k => k.cat)).size} packages</span>
+      <span class="cw-gpa">15.11 / 20 · GPA 3.0 / 4</span></summary>
+    <p class="cw-lead">Skills from the ESI curriculum, in the shelf's own packages. The shelf above carries
+      only what a linked work proves; what the degree taught and none of my builds demonstrate is listed
+      here instead. Marks are the S1–S4 cumulative from the transcript.</p>
+    ${cwRows}
+  </details>`;
 
   app.innerHTML = `
   <section class="hero wrap">
@@ -703,13 +712,7 @@ function renderAbout() {
     <section class="d-section">
       <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Education</h2><span class="sec-line"></span></div>
       <div class="edu">
-        ${EDU.map(([w, what, when, course]) => `<div class="edu-row"><b>${w}</b><span>${what}${course ? `<em class="edu-course">${course}</em>` : ''}</span><i>${when}</i></div>`).join('')}
-      </div>
-      <div class="cw-shelf">
-        <p class="cw-lead">Skills from the ESI curriculum, in the shelf's own packages. The shelf above carries
-          only what a linked work proves; what the degree taught and none of my builds demonstrate is listed
-          here instead.</p>
-        ${cwRows}
+        ${EDU.map(([w, what, when, course], i) => `<div class="edu-row"><b>${w}</b><span>${what}${course ? `<em class="edu-course">${course}</em>` : ''}</span><i>${when}</i></div>${i === 0 ? cwBlock : ''}`).join('')}
       </div>
     </section>
 
