@@ -1,0 +1,810 @@
+;(function(){
+/* Application entry: renderer, HDR-graded pipeline, gallery assembly,
+   ScrollTrigger-bound camera, mirror-polished floor, tracking picture lights. */
+'use strict';
+
+const M = Museum, A = Art, CR = window.CameraRig;
+const { ROOM } = M;
+const clamp = CR.clamp;
+
+/* --------------------------------------------------------------- catalogue */
+
+const FALLBACK_KINDS = ['storm_cliffs', 'classical_ruins', 'noblewoman', 'vanitas',
+  'dutch_meadow', 'garden_path', 'nocturne'];
+
+/* Seven pictures, one stop each. At twenty-five works the visitor was always in
+   transit and never actually in front of a canvas; a sparse hang is what lets
+   the camera square up to a picture and stay there.
+   `note` is the label copy that fills the half of the screen the canvas leaves
+   free at each stop — two sentences, in the plain voice of a wall text. */
+/* Seven pictures, one stop each — and each picture now stands for one work from
+   the CV. `work` is that mapping: the accent is the picture's own corruption hue
+   (so the tear and the label plate are the same colour), `kind` decides the
+   silhouette (a stage cuts three corners of its logo, a project two), `mark` is
+   the lettermark drawn in the square behind the title, and `desc` replaces the
+   art-historical note as the body copy. The painting's own title, painter and
+   date survive as a small credit along the bottom of the plate. */
+const CATALOGUE = [
+  { wall: 'L', slot: 10, src: 'images/friedrich_wanderer.jpg', glitch: { invert: true, hue: 0xffffff }, size: { h: 1.45 }, title: 'Der Wanderer über dem Nebelmeer', artist: 'Caspar David Friedrich', year: 'c. 1818', medium: 'Oil on canvas', finish: 'gilt', frame: 'ornate',
+    work: { name: 'FixProof', kind: 'project', org: '', accent: 0xf2ede0, mark: 'FP', cuts: ['tl', 'br'],
+      desc: 'A command-line tool that reproduces a vulnerability on a target, then replays the same payload after the patch to prove it is fixed. Loopback-only by design, with a three-state XSS verdict caught in headless Chromium.' } },
+  { wall: 'R', slot: 8, src: 'images/scream.jpg', glitch: { hue: 0xe8710a }, size: { h: 1.42 }, title: 'The Scream', artist: 'Edvard Munch', year: '1893', medium: 'Tempera and oil on canvas', finish: 'bronze', frame: 'roman',
+    work: { name: 'CSE-CIC-IDS2018', kind: 'project', org: '', accent: 0xff8a3d, mark: 'IDS', cuts: ['tr', 'bl'],
+      desc: 'A three-stage machine-learning cascade over 6.7 million real network-flow records: a calibrated sentinel alerts, a second model names the attack vector, and a third isolates rare attacks past where SMOTE gives out.' } },
+  { wall: 'L', slot: 0, src: 'images/girl_pearl.jpg', glitch: { hue: 0xffff00 }, size: { h: 1.28 }, title: 'Girl with a Pearl Earring', artist: 'Johannes Vermeer', year: 'c. 1665', medium: 'Oil on canvas', finish: 'darkGilt', frame: 'ornate',
+    work: { name: 'Litmus', kind: 'project', org: '', accent: 0xffd23f, mark: 'L', cuts: ['tr', 'br'],
+      desc: 'A platform that flags AI-written text: an Angular front end, an offline Python engine, and a benchmark that ranks the detectors against each other over a 48-text corpus, with provider keys encrypted at rest.' } },
+  { wall: 'R', slot: 2, src: 'images/great_wave.jpg', glitch: { invert: true, hue: 0x1e40af, neon: 0.45 }, size: { w: 1.62 }, title: 'The Great Wave off Kanagawa', artist: 'Katsushika Hokusai', year: 'c. 1831', medium: 'Woodblock print, ink and colour', finish: 'ebonized', frame: 'plain',
+    work: { name: 'ESI Wiki', kind: 'project', org: '', accent: 0x4f8dff, mark: 'E', cuts: ['tl', 'br'],
+      desc: 'A school knowledge base of 900+ course documents — Django and React behind full-text search, with an assistant that answers from the corpus itself: the database first, the index second, a model last.' } },
+  { wall: 'L', slot: 4, src: 'images/starry_night.jpg', glitch: { hue: 0x39ff14 }, size: { w: 1.42 }, title: 'De sterrennacht', artist: 'Vincent van Gogh', year: '1889', medium: 'Oil on canvas', finish: 'gilt', frame: 'ornate',
+    work: { name: 'Cisco ISE', kind: 'stage', org: 'Data Digital Maroc', accent: 0x35e07a, mark: 'ISE', cuts: ['tl', 'tr', 'br'],
+      desc: 'An identity-and-access deployment on an EVE-NG lab: Policy Admin, Policy Service and Monitoring nodes centralising AAA for wired, wireless and VPN logins, with 802.1X, MAB fallback and dynamic VLAN assignment.' } },
+  { wall: 'R', slot: 5, src: 'images/persistence_memory.jpg', glitch: { hue: 0x22d3ee }, size: { w: 1.44 }, title: 'La persistència de la memòria', artist: 'Salvador Dalí', year: '1931', medium: 'Oil on canvas', finish: 'ebonized', frame: 'plain',
+    work: { name: 'GameVerse Academy', kind: 'project', org: '', accent: 0x22d3ee, mark: 'GV', cuts: ['tr', 'bl'],
+      desc: 'A secure mod-sharing platform for a gaming community: JSP and servlets over an MVC layer on embedded Tomcat, sessions regenerated at login, and XSS and SQL injection closed by global filters.' } },
+  /* the end of the axis carries the smallest canvas in the room in the largest
+     frame — a destination rather than a decoration, hung low enough to meet */
+  { wall: 'F', slot: 0, src: 'images/mona_lisa.jpg', aspect: 0.681, glitch: { cx: -0.04, cy: 0.56, radius: 0.78, invert: true, hue: 0xff0000 }, size: { h: 1.9 }, cy: 2.0, title: 'La Joconde', artist: 'Leonardo da Vinci', year: 'c. 1503–1519', medium: 'Oil on poplar panel', finish: 'gilt', frame: 'baroque', monumental: true,
+    work: { name: 'raxag', kind: 'stage', org: 'Raisecom', accent: 0xff453a, mark: 'R', cuts: ['tl', 'tr', 'bl'],
+      desc: 'Nine network-integration services — CLI parsers, an LLDP topology rebuild, a secret-stripping pass — compiled into one Windows exe with 629 passing checks and a bilingual guide. It grew out of a telecom-integration internship at Raisecom.' } }
+];
+
+const H_LIMIT = 2.9, W_LIMIT = 2.15;   /* the recess these sit in is 2.7 x 3.3 */
+/* the end wall carries no recess, so its panel may exceed the bay limits */
+const MONUMENTAL = { w: 2.62, h: 2.4 };
+
+function sizeFor(aspect, want, limit) {
+  const lim = limit || { w: W_LIMIT, h: H_LIMIT };
+  let w, h;
+  if (want && want.w) { w = want.w; h = w / aspect; }
+  else { h = (want && want.h) || 1.4; w = h * aspect; }
+  if (w > lim.w) { w = lim.w; h = w / aspect; }
+  if (h > lim.h) { h = lim.h; w = h * aspect; }
+  return { w, h };
+}
+
+/* ------------------------------------------------------------- DOM + boot */
+
+const dom = {};
+['track', 'stage', 'cap', 'prog', 'bar', 'title', 'end', 'load', 'loadText', 'fatal', 'veil']
+  .forEach(id => { dom[id] = document.getElementById(id); });
+
+let renderer, scene, camera, composer, rig, bloomPass, fxaa, gradePass;
+let paintings = [], spots = [], sun;
+/* Reduced motion still shows the destruction — it is the subject of the shot —
+   but freezes it instead of letting the shards snap. */
+const stillFrames = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let mirror = null;                     /* floor reflection pipeline, or null */
+let scrollP = 0, lastFocus = null, frames = 0, lowPerf = false;
+let slowAcc = 0, slowN = 0;
+/* The closing beat bleaches the plaster to a plain. `codaMats` are the surfaces
+   it happens to, `codaT` how far the lift has climbed through them. */
+let codaMats = [], codaT = -1;
+
+/* Which surfaces the coda bleaches, if any. The hung ending is the lit one: the
+   visit ends looking up at a warm ceiling, not at a plain. ?coda=ceil lifts the
+   plane overhead, ?coda=room takes all the plaster with it, and ?coda=off — the
+   default — leaves the room lit as it is hung. */
+const CODA = ((location.search.match(/[?&]coda=(\w+)/) || [])[1]) || 'off';
+const clock = new THREE.Clock();
+
+function fatal(msg) {
+  dom.load.classList.add('gone');
+  dom.fatal.textContent = msg;
+  dom.fatal.style.display = 'block';
+}
+function loadStep(text) { if (dom.loadText) dom.loadText.textContent = text; }
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => r()));
+
+function initRenderer() {
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  } catch (e) {
+    fatal('This experience needs WebGL. ' + e.message);
+    return false;
+  }
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(dpr);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  dom.stage.appendChild(renderer.domElement);
+  /* Quality is a function of the rasteriser, not the display: a dpr-1 monitor is
+     the common case and must still get the mirror floor and full textures. */
+  const gl = renderer.getContext();
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const gpu = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : '';
+  const liteGpu = /swiftshader|software\s*mesa|basic\s*render|llvmpipe/i.test(gpu);
+  const q = window.location.search;
+  lowPerf = !/[?&]full\b/.test(q) && (liteGpu || /[?&]lite\b/.test(q));
+  return true;
+}
+
+function initScene() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x8a8071, 0.0068);
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 140);
+  scene.environment = M.makeEnvironment(renderer);
+}
+
+function initLights() {
+  scene.add(new THREE.HemisphereLight(0xfff2dd, 0xa8957a, 1.5));
+
+  /* soft daylight through the skylight slot — the room's only shadow caster */
+  sun = new THREE.DirectionalLight(0xfff2dc, 1.5);
+  sun.position.set(2.5, 12, -6);
+  sun.target.position.set(0, 0, -8);
+  sun.castShadow = true;
+  const sm = lowPerf ? 1024 : 2048;
+  sun.shadow.mapSize.set(sm, sm);
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 34;
+  sun.shadow.camera.left = -9;
+  sun.shadow.camera.right = 9;
+  sun.shadow.camera.top = 10;
+  sun.shadow.camera.bottom = -32;
+  sun.shadow.bias = -0.0006;
+  sun.shadow.normalBias = 0.02;
+  sun.shadow.radius = 3;
+  scene.add(sun, sun.target);
+
+  /* two picture lights that travel with the visitor and wash the focused wall.
+     Wide and edgeless on purpose: a tight cone reads as a stage spot, not as a
+     gallery fixture. */
+  for (const sgn of [-1, 1]) {
+    const sp = new THREE.SpotLight(0xffd9a4, 0, 10.5, 0.86, 1, 1.2);
+    sp.position.set(sgn * (ROOM.halfW - 1.35), 3.7, -8);
+    scene.add(sp, sp.target);
+    spots.push({ light: sp, side: sgn, weight: 0.2 });
+  }
+
+  const fill = new THREE.PointLight(0xffd8a8, 14, 24, 2);
+  fill.position.set(0, 2.8, ROOM.zBack + 4.5);
+  scene.add(fill);
+}
+
+/* -------------------------------------------------------------- assembly */
+
+function buildRoom(mats) {
+  scene.add(M.buildSideWall(mats.wallMat, mats.trimMat, -1));
+  scene.add(M.buildSideWall(mats.wallMat, mats.trimMat, 1));
+  scene.add(M.buildEndWalls(mats.wallMat, mats.trimMat));
+  /* The ceiling's moulding is a twin of the wall trim rather than the trim
+     itself, so the coda can bleach the plane overhead without turning every
+     pilaster and skirting in the room white with it. */
+  const ceilTrim = mats.trimMat.clone();
+  const ceiling = M.buildCeiling(mats.ceilingMat, ceilTrim);
+  scene.add(ceiling);
+  scene.add(M.buildFurniture(mats));
+  const panels = new THREE.Group();
+  for (const side of [-1, 1]) {
+    ROOM.panelZs.forEach((z, i) => panels.add(M.buildPanel(mats.trimMat, mats.wallMat, side, z, 100 + i * 7 + (side + 2))));
+  }
+  /* the end wall carries no recess: buildPanel is laid out on side-wall axes
+     and would stand a stray slab proud of the right-hand corner */
+  scene.add(panels);
+  /* The break is not a sticker on the picture: plaster, reveal and moulding all
+     stop existing inside the same outline, so every one of these materials has
+     to carry the cut. */
+  Glitch.patch(mats.wallMat);
+  Glitch.patch(mats.trimMat);
+  Glitch.patch(ceilTrim);
+  M.panelBacks.forEach(b => Glitch.patch(b));
+  Object.keys(mats.frames).forEach(k => Glitch.patch(mats.frames[k]));
+  /* the ceiling's three surfaces: the plaster slab, its moulding, and the pair
+     of lantern plates stretched across the slot between the coffers. Each ends
+     on its own gain — a plain that has lost every seam is a blank rather than a
+     ceiling, so the beams and the glazing stop short of the plaster's blowout */
+  const overhead = [[mats.ceilingMat, 2.2], [ceilTrim, 1.3]]
+    .concat(ceiling.userData.lantern.map(m => [m, 1.8]));
+  codaMats = CODA === 'off' ? []
+    : CODA === 'room' ? overhead.concat([[mats.wallMat, 2.2], [mats.trimMat, 1.3]])
+    : overhead;
+  return panels;
+}
+
+/* Floor: marble + a planar mirror pass blended with grazing-angle weighting.
+   Rendered at half composer size every other frame, blurred once, sampled in
+   screen space — polished stone, not a wet mirror. */
+function buildFloor(mats) {
+  const len = ROOM.zFront - ROOM.zBack;
+  const zc = (ROOM.zFront + ROOM.zBack) / 2;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.halfW * 2, len), mats.floor);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(0, 0, zc);
+  floor.receiveShadow = true;
+  floor.name = 'marbleFloor';
+  scene.add(floor);
+  if (lowPerf) return;
+
+  const vpw = Math.max(2, Math.floor(window.innerWidth * renderer.getPixelRatio() / 2));
+  const vph = Math.max(2, Math.floor(window.innerHeight * renderer.getPixelRatio() / 2));
+  const makeRT = () => new THREE.WebGLRenderTarget(vpw, vph, { type: THREE.HalfFloatType });
+  mirror = {
+    cam: new THREE.PerspectiveCamera(),
+    rtScene: makeRT(),
+    rtBlur: makeRT(),
+    floor,
+    view: new THREE.Matrix4(),
+    projView: new THREE.Matrix4()
+  };
+
+  mirror.blurMat = new THREE.ShaderMaterial({
+    uniforms: {
+      tDiffuse: { value: null },
+      uStep: { value: new THREE.Vector2(2.2 / vpw, 2.2 / vph) }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`,
+    fragmentShader: `
+      uniform sampler2D tDiffuse; uniform vec2 uStep; varying vec2 vUv;
+      void main() {
+        vec3 a = texture2D(tDiffuse, vUv + vec2( -uStep.x, -uStep.y )).rgb
+               + texture2D(tDiffuse, vUv + vec2( -uStep.x,  uStep.y )).rgb
+               + texture2D(tDiffuse, vUv + vec2(  uStep.x, -uStep.y )).rgb
+               + texture2D(tDiffuse, vUv + vec2(  uStep.x,  uStep.y )).rgb;
+        vec3 b = texture2D(tDiffuse, vUv + vec2( uStep.x * 3.1, 0.0)).rgb
+               + texture2D(tDiffuse, vUv + vec2(-uStep.x * 3.1, 0.0)).rgb
+               + texture2D(tDiffuse, vUv + vec2( 0.0, uStep.y * 3.1)).rgb
+               + texture2D(tDiffuse, vUv + vec2( 0.0,-uStep.y * 3.1)).rgb;
+        gl_FragColor = vec4( a * 0.105 + b * 0.07, 1.0 );
+      }`,
+    depthTest: false, depthWrite: false
+  });
+
+  mirror.overlayMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: {
+      tReflection: { value: mirror.rtBlur.texture },
+      uMirrorViewProj: { value: new THREE.Matrix4() },
+      uCamPos: { value: new THREE.Vector3() },
+      uOpacity: { value: 0.62 }
+    },
+    vertexShader: `
+      varying vec4 vClipPos;
+      varying vec3 vWorld;
+      void main() {
+        vec4 wp = modelMatrix * vec4( position, 1.0 );
+        vWorld = wp.xyz;
+        vClipPos = projectionMatrix * viewMatrix * wp;
+        gl_Position = vClipPos;
+      }`,
+    fragmentShader: `
+      uniform sampler2D tReflection;
+      uniform mat4 uMirrorViewProj;
+      uniform vec3 uCamPos;
+      uniform float uOpacity;
+      varying vec4 vClipPos;
+      varying vec3 vWorld;
+      void main() {
+        vec2 screen = vClipPos.xy / vClipPos.w * 0.5 + 0.5;
+        vec4 mp = uMirrorViewProj * vec4( vWorld, 1.0 );
+        vec2 muv = mp.xy / mp.w * 0.5 + 0.5;
+        if ( mp.w <= 0.0 || muv.x < 0.0 || muv.x > 1.0 || muv.y < 0.0 || muv.y > 1.0 )
+          discard;
+        vec3 refl = texture2D( tReflection, muv ).rgb;
+        /* reflections live at grazing angles, near the feet they fade out */
+        vec3 viewDir = normalize( uCamPos - vWorld );
+        float graze = clamp( 1.0 - abs( viewDir.y ), 0.0, 1.0 );
+        float w = smoothstep( 0.05, 0.72, graze );
+        float lum = max( max( refl.r, refl.g ), refl.b );
+        w *= smoothstep( 0.015, 0.12, lum );
+        refl *= vec3( 1.0, 0.975, 0.93 );            /* warm stone tint */
+        gl_FragColor = vec4( refl, w * uOpacity );
+      }`
+  });
+
+  const overlay = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.halfW * 2, len), mirror.overlayMat);
+  overlay.rotation.x = -Math.PI / 2;
+  overlay.position.set(0, 0.014, zc);
+  overlay.renderOrder = 2;
+  scene.add(overlay);
+  mirror.overlay = overlay;
+}
+
+const _mirrorQuadCam = () => new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+let mirrorQuadCam = null, mirrorQuadMesh = null;
+function blit(mat, target) {
+  if (!mirrorQuadCam) {
+    mirrorQuadCam = _mirrorQuadCam();
+    mirrorQuadMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+    mirrorQuadMesh.frustumCulled = false;
+  }
+  mirrorQuadMesh.material = mat;
+  renderer.setRenderTarget(target);
+  renderer.render(mirrorQuadMesh, mirrorQuadCam);
+  renderer.setRenderTarget(null);
+}
+
+const _mlook = new THREE.Vector3();
+function renderMirrorPass() {
+  const mc = mirror.cam;
+  camera.getWorldDirection(_mlook);
+  mc.up.set(0, 1, 0);
+  mc.position.set(camera.position.x, -camera.position.y, camera.position.z);
+  /* reflect the eye and the view direction through the floor plane */
+  mc.lookAt(mc.position.x + _mlook.x, -_mlook.y + mc.position.y, mc.position.z + _mlook.z);
+  mc.fov = camera.fov;
+  mc.aspect = camera.aspect;
+  mc.near = camera.near;
+  mc.far = camera.far;
+  mc.updateProjectionMatrix();
+  mc.updateMatrixWorld(true);
+  mc.matrixWorldInverse.copy(mc.matrixWorld).invert();
+
+  mirror.view.copy(mc.matrixWorldInverse);
+  mirror.projView.multiplyMatrices(mc.projectionMatrix, mirror.view);
+  mirror.overlayMat.uniforms.uMirrorViewProj.value.copy(mirror.projView);
+  mirror.overlayMat.uniforms.uCamPos.value.copy(camera.position);
+
+  mirror.floor.visible = false;
+  mirror.overlay.visible = false;
+  renderer.setRenderTarget(mirror.rtScene);
+  renderer.clear();
+  renderer.render(scene, mc);
+  mirror.floor.visible = true;
+  mirror.overlay.visible = true;
+  renderer.setRenderTarget(null);
+
+  mirror.blurMat.uniforms.tDiffuse.value = mirror.rtScene.texture;
+  blit(mirror.blurMat, mirror.rtBlur);
+}
+
+/* -------------------------------------------------------------- paintings */
+
+function fitCanvasToImage(img, W, H) {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  c.getContext('2d').drawImage(img, 0, 0, W, H);
+  return c;
+}
+
+function toneWash(canvas, alpha) {
+  /* unify scanned artworks with the procedurally painted surfaces */
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const rnd = A.mulberry32(9);
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = alpha;
+  const g = ctx.createLinearGradient(0, 0, W * 0.4, H);
+  g.addColorStop(0, '#f4e3c4'); g.addColorStop(0.55, '#e9d6b2'); g.addColorStop(1, '#d3bd97');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = alpha * 0.5;
+  ctx.drawImage(A.varnishOverlay(W, H, rnd), 0, 0);
+  ctx.restore();
+  ctx.save();
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.globalAlpha = 0.45;
+  const cracks = document.createElement('canvas');
+  cracks.width = W; cracks.height = H;
+  const cc = cracks.getContext('2d');
+  cc.strokeStyle = 'rgba(238,232,214,.7)';
+  cc.lineWidth = Math.max(0.8, W / 1100);
+  for (let i = 0; i < 240; i++) {
+    const x = rnd() * W, y = rnd() * H;
+    const a = rnd() * Math.PI * 2, l = W * (0.01 + rnd() * 0.05);
+    cc.globalAlpha = 0.15 + rnd() * 0.4;
+    cc.beginPath(); cc.moveTo(x, y);
+    cc.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l);
+    cc.stroke();
+  }
+  ctx.drawImage(cracks, 0, 0);
+  ctx.restore();
+}
+
+function buildOnePainting(e, mats) {
+  const aspect = e.aspect;
+  const px = Math.round(clamp(e.w * (lowPerf ? 520 : 760), 640, e.monumental ? 2048 : 1400));
+  const surf = e.img
+    ? { canvas: fitCanvasToImage(e.img, px, Math.round(px / aspect)), meta: {} }
+    : A.makePainting(e.kind, px, e.seed, { aspect });
+  if (e.img) toneWash(surf.canvas, 0.3);
+  A.bakePictureLight(surf.canvas, { x: 0.5, y: 0.08, radius: 1.0 });
+
+  const aniso = renderer.capabilities.getMaxAnisotropy();
+  const map = M.canvasTexture(surf.canvas, { anisotropy: aniso });
+  /* the weave has to stay well above the anisotropic filter's resolution or the
+     ridges beat against the pixels and throw vertical bars across the canvas */
+  const height = A.buildImpastoHeight(surf.canvas, lowPerf ? 84 : 112);
+  const nmap = M.canvasTexture(A.normalFromHeight(height, 1.9), { data: true, anisotropy: aniso });
+  const rmap = M.canvasTexture(A.roughFromSurface(height, surf.canvas,
+    { x: 0.5, y: 0.12, aspect: surf.canvas.width / surf.canvas.height }), { data: true, anisotropy: aniso });
+
+  const paintMat = new THREE.MeshStandardMaterial({
+    map, normalMap: nmap, roughnessMap: rmap, roughness: 1, metalness: 0,
+    normalScale: new THREE.Vector2(0.5, 0.5), envMapIntensity: 0.36
+  });
+  Glitch.patch(paintMat);
+  const group = new THREE.Group();
+  /* ?frame= swaps every work's moulding at once: the menu of sections is four
+     renders of one room, not four edits of the catalogue. */
+  group.add(M.buildFrame(mats.frames[e.finish], e.w, e.h,
+    M.FRAME_PRESETS[new URLSearchParams(location.search).get('frame')] ||
+    M.FRAME_PRESETS[e.frame]));
+  const canvasMesh = M.buildPaintingMesh({ w: e.w, h: e.h, seed: e.seed }, paintMat);
+  canvasMesh.position.z = 0.03;
+  group.add(canvasMesh);
+  /* Behind the paint, in register with it: black, then the duplicate the break
+     opens onto. The light that edges the break is its own additive quad at its
+     own depth, so the frame's depth is none of the glitch layer's business. */
+  Glitch.build(group, e, surf.canvas,
+    { voidZ: e.wall === 'F' ? -0.85 : -0.5 });
+  const fixture = M.buildPictureLight(mats.brass, mats.brassHot, e.w,
+    e.h / 2 + 0.26);
+  /* The picture light's pool is a wash of additive warmth hung 15 cm off the
+     frame, in front of everything the break cuts. Left alone it keeps pouring
+     light across the mouth it should have fallen into, and a pale sheet of it
+     stands in the tear. */
+  Glitch.patch(fixture.userData.lightPool.material);
+  group.add(fixture);
+  return group;
+}
+
+async function placePaintings(mats) {
+  for (const e of CATALOGUE) {
+    e.seed = 1000 + e.wall.charCodeAt(0) * 31 + e.slot * 977;
+    if (e.wall === 'F') {
+      e.side = 0;
+      e.z = ROOM.zBack + 0.2;
+      e.aspect = e.aspect || A.ASPECTS[e.kind] || 1.2;
+      const s = sizeFor(e.aspect, e.size, MONUMENTAL);
+      e.w = s.w; e.h = s.h; e.cy = e.cy || 2.35;
+    } else {
+      e.side = e.wall === 'L' ? -1 : 1;
+      e.z = ROOM.panelZs[e.slot];
+      e.aspect = e.src ? 1.25 : (A.ASPECTS[e.kind] || 1.3);
+      const s = sizeFor(e.aspect, e.size);
+      e.w = s.w; e.h = s.h;
+      /* hang on a common picture line rather than a common centre */
+      e.cy = 1.06 + e.h / 2;
+    }
+    paintings.push(e);
+  }
+
+  /* load the real artworks first so their true aspect drives the geometry */
+  const pending = CATALOGUE.filter(e => e.src);
+  loadStep('Unrolling the canvases');
+  await Promise.all(pending.map(e => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      e.img = img;
+      e.aspect = img.naturalWidth / img.naturalHeight;
+      const s = sizeFor(e.aspect, e.size, e.wall === 'F' ? MONUMENTAL : null);
+      e.w = s.w; e.h = s.h;
+      /* the end wall panel hangs on its own line, not the side-wall picture line */
+      if (e.wall !== 'F') e.cy = 1.06 + e.h / 2;
+      resolve();
+    };
+    img.onerror = () => {
+      e.src = null;
+      e.kind = FALLBACK_KINDS[e.slot % FALLBACK_KINDS.length];
+      e.aspect = A.ASPECTS[e.kind] || 1.3;
+      const s = sizeFor(e.aspect, e.size);
+      e.w = s.w; e.h = s.h;
+      e.cy = 1.06 + e.h / 2;
+      resolve();
+    };
+    img.src = e.src;
+  })));
+
+  loadStep('Stretching the linen');
+  for (let i = 0; i < paintings.length; i++) {
+    const e = paintings[i];
+    const g = buildOnePainting(e, mats);
+    if (e.wall === 'F') {
+      g.position.set(0, e.cy, e.z);
+    } else {
+      g.position.set(e.side * ROOM.wallX, e.cy, e.z);
+      g.rotation.y = e.side < 0 ? Math.PI / 2 : -Math.PI / 2;
+    }
+    scene.add(g);
+    e.group = g;
+    Glitch.register(g, e);
+    if (i % 3 === 2) {
+      loadStep('Hanging picture ' + (i + 1) + ' of ' + paintings.length);
+      await nextFrame();
+    }
+  }
+}
+
+/* ----------------------------------------------------------------- post-fx */
+
+const GradeShader = {
+  name: 'GradeShader',
+  uniforms: {
+    tDiffuse: { value: null },
+    uScreenSize: { value: new THREE.Vector2(1, 1) },
+    uTime: { value: 0 },
+    uVignette: { value: 0.32 },
+    uGrain: { value: 0.013 }
+  },
+  vertexShader: `
+    varying vec2 vUvGrade;
+    void main() {
+      vUvGrade = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform vec2 uScreenSize;
+    uniform float uTime, uVignette, uGrain;
+    varying vec2 vUvGrade;
+
+    float hash12( vec2 p ) {
+      vec3 p3 = fract( vec3( p.xyx ) * 0.1031 );
+      p3 += dot( p3, p3.yzx + 33.33 );
+      return fract( ( p3.x + p3.y ) * p3.z );
+    }
+
+    void main() {
+      vec4 src = texture2D( tDiffuse, vUvGrade );
+      vec3 c = src.rgb;                       /* already display-referred */
+      float lum = dot( c, vec3( 0.2126, 0.7152, 0.0722 ) );
+
+      /* gentle filmic S-curve; keep shadow detail, roll the highlights */
+      c = mix( c, c * c * ( 3.0 - 2.0 * c ), 0.16 );
+      c = mix( c, c * vec3( 1.03, 1.008, 0.972 ), 0.6 );   /* warm bias */
+      c *= vec3( 1.0, 0.996, 0.988 ) + ( 1.0 - lum ) * vec3( -0.035, -0.012, 0.028 );
+
+      vec2 q = ( vUvGrade - 0.5 ) * vec2( uScreenSize.x / max( 1.0, uScreenSize.y ), 1.0 );
+      c *= 1.0 - uVignette * pow( clamp( length( q ) * 1.42, 0.0, 1.0 ), 2.3 );
+
+      float g = hash12( floor( vUvGrade * uScreenSize ) + fract( uTime ) * 131.0 );
+      c += ( g - 0.5 ) * uGrain * ( 1.35 - lum ) + ( hash12( gl_FragCoord.xy ) - 0.5 ) / 255.0;
+
+      gl_FragColor = vec4( clamp( c, 0.0, 1.0 ), src.a );
+    }`
+};
+
+function initPost() {
+  const w = window.innerWidth, h = window.innerHeight;
+  composer = new THREE.EffectComposer(renderer, new THREE.WebGLRenderTarget(w, h, {
+    type: THREE.HalfFloatType
+  }));
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(w, h), 0.26, 0.7, 0.85);
+  composer.addPass(bloomPass);
+  /* tone map and encode before the grade and FXAA: both are only correct on
+     display-referred data, and FXAA on linear HDR fringes cyan at edges */
+  composer.addPass(new THREE.OutputPass());
+  gradePass = new THREE.ShaderPass(GradeShader);
+  composer.addPass(gradePass);
+  fxaa = new THREE.ShaderPass(THREE.FXAAShader);
+  composer.addPass(fxaa);
+  applySize();
+}
+
+function applySize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(dpr);
+  renderer.setSize(w, h);
+  if (composer) composer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  if (mirror) {
+    const vw = Math.max(2, Math.floor(w * dpr / 2));
+    const vh = Math.max(2, Math.floor(h * dpr / 2));
+    mirror.rtScene.setSize(vw, vh);
+    mirror.rtBlur.setSize(vw, vh);
+    mirror.blurMat.uniforms.uStep.value.set(2.2 / vw, 2.2 / vh);
+  }
+  if (fxaa) fxaa.material.uniforms.resolution.value.set(1 / (w * dpr), 1 / (h * dpr));
+  if (gradePass) gradePass.material.uniforms.uScreenSize.value.set(w * dpr, h * dpr);
+  if (rig) { rig.opts.aspect = w / h; rig.build(); rig.update(); }
+  ScrollTrigger && ScrollTrigger.refresh();
+}
+
+/* ----------------------------------------------------------------- scroll */
+
+function initScroll() {
+  gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.create({
+    trigger: dom.track,
+    start: 'top top',
+    end: 'bottom bottom',
+    onUpdate(self) { scrollP = self.progress; }
+  });
+  const qp = new URLSearchParams(location.search).get('p');
+  if (qp !== null) {
+    const p = clamp(parseFloat(qp) || 0, 0, 1);
+    window.scrollTo(0, p * (document.documentElement.scrollHeight - window.innerHeight));
+    scrollP = p;
+  } else {
+    scrollP = window.scrollY / Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  }
+}
+
+/* ------------------------------------------------------------------- HUD */
+
+/* A cut-corner silhouette: the same polygon carves the label plate and the
+   logo square, so a stage's three chamfers and a project's two read as one
+   family. `s` is the chamfer in px; a corner named in `cuts` is sliced. */
+function cutPath(cuts, s) {
+  const c = k => (cuts.indexOf(k) >= 0 ? s : 0);
+  const tl = c('tl'), tr = c('tr'), br = c('br'), bl = c('bl');
+  return 'polygon(' + tl + 'px 0, calc(100% - ' + tr + 'px) 0, 100% ' + tr + 'px,' +
+    ' 100% calc(100% - ' + br + 'px), calc(100% - ' + br + 'px) 100%,' +
+    ' ' + bl + 'px 100%, 0 calc(100% - ' + bl + 'px), 0 ' + tl + 'px)';
+}
+
+function updateCaption() {
+  /* The card belongs to the stop, not to the walk: it is set while the camera
+     stands at a picture and it occupies the half of the frame the canvas has
+     left free, so it alternates edge for edge with the hang. Each picture
+     exhibits one work: the plate carries its name, its own story, and the
+     painting's credit in small type along the bottom. */
+  const e = (rig.holding && rig.frameSide) ? rig.focusPainting() : null;
+  if (!e) { dom.cap.classList.remove('on'); return; }
+  dom.cap.classList.toggle('left', rig.frameSide > 0);
+  dom.cap.classList.toggle('right', rig.frameSide < 0);
+  if (lastFocus !== e) {
+    lastFocus = e;
+    const w = e.work, cap = dom.cap;
+    const hex = '#' + w.accent.toString(16).padStart(6, '0');
+    cap.style.setProperty('--accent', hex);
+    /* the plate and its seal share one silhouette, at two scales */
+    cap.querySelector('.plate').style.clipPath = cutPath(w.cuts, 30);
+    const logo = cap.querySelector('.logo');
+    logo.style.clipPath = cutPath(w.cuts, 12);
+    logo.firstElementChild.textContent = w.mark;
+    cap.querySelector('.n').textContent =
+      w.kind === 'stage' ? 'Internship · ' + w.org : 'Personal project';
+    cap.querySelector('h1').textContent = w.name;
+    cap.querySelector('p').textContent = w.desc;
+    cap.querySelector('.t').textContent =
+      'No. ' + String(paintings.indexOf(e) + 1).padStart(2, '0') +
+      ' · ' + e.title + ' · ' + e.artist + ' · ' + e.year;
+  }
+  dom.cap.classList.add('on');
+}
+
+function updateSpots(dt) {
+  const f = rig.focusPainting();
+  for (const s of spots) {
+    const p = (f && f.side === s.side) ? f : null;
+    const z = p ? p.z : -14;
+    const want = p ? 1 : 0.16;
+    s.weight += (want - s.weight) * (1 - Math.exp(-3.2 * dt));
+    s.light.position.set(s.side * (ROOM.halfW - 1.4), 3.65, z + s.side * 0.35);
+    s.light.target.position.set(s.side * ROOM.wallX, (p ? p.cy : 2.1) - 0.12, z);
+    s.light.target.updateMatrixWorld();
+    s.light.intensity = 21 * s.weight;
+  }
+}
+
+/* ------------------------------------------------------------------- coda */
+
+const WHITE = new THREE.Color(0xffffff);
+
+/* Each surface lifts from the tone it already carries — the ceiling's warm
+   stand-in for the lantern's bounce, the walls' nothing — so at t = 0 the room
+   is exactly as hung, and each ends on the gain it is given. The climb runs on
+   t squared, which keeps the first half of the tilt out of the blowout and
+   spends the whiteness on the last of it. */
+function setBleach(t) {
+  for (const [m, peak] of codaMats) {
+    /* plaster is a lit surface, so the lift rides its emissive; the lantern
+       plates are unlit, and the only knob they have is their own colour */
+    const lit = !!m.emissive;
+    const tone = lit ? m.emissive : m.color;
+    const u = m.userData.lift || (m.userData.lift =
+      { from: tone.clone(), base: m.emissiveIntensity });
+    tone.copy(u.from).lerp(WHITE, t);
+    if (lit) m.emissiveIntensity = u.base + (peak - u.base) * t * t;
+    else tone.multiplyScalar(1 + (peak - 1) * t);
+  }
+  /* the frame opens as the field goes white: a dark vignette over a plain of
+     plaster is a hole. The plate turns over to ink at the same crossing. */
+  gradePass.material.uniforms.uVignette.value = 0.32 * (1 - t * 0.75);
+  document.body.classList.toggle('bleached', t > 0.55);
+}
+
+function updateCoda() {
+  /* the coda is the tail of the track: the two moves onto the final hold. The
+     lift itself is read off the lens's elevation, not off scroll, so the field
+     is exactly as white as the ceiling is high — and a picture beat's couple of
+     degrees of pitch costs a rounding error. */
+  const t = codaMats.length && rig.segment >= rig.N - 3
+    ? CR.smooth(clamp(rig.pitchDeg / 90, 0, 1)) : 0;
+  if (Math.abs(t - codaT) < 0.002) return;
+  codaT = t;
+  setBleach(t);
+}
+
+function updateHud() {
+  dom.prog.textContent = Math.round(scrollP * 100) + '% walked';
+  dom.bar.firstElementChild.style.width = (scrollP * 100).toFixed(1) + '%';
+  dom.title.style.opacity = scrollP < 0.012 ? 1 : 0;
+  dom.end.style.opacity = scrollP > 0.986 ? 1 : 0;
+  /* the scrim is what keeps the plate legible on a dark room; the coda lifts it
+     as the same beat bleaches the plaster to white */
+  dom.veil.style.opacity = scrollP > 0.92
+    ? (scrollP - 0.92) / 0.08 * 0.5 * (1 - codaT) : 0;
+}
+
+/* ------------------------------------------------------------------ loop */
+
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, clock.getDelta());
+  rig.tick(dt, scrollP);
+  updateCoda();
+  updateSpots(dt);
+  updateCaption();
+  gradePass.material.uniforms.uTime.value = (performance.now() * 0.001) % 97;
+  /* The break re-cuts on one steady beat, all seven of them at the same
+     instant: no idle stretch and no frenzy, just a constant corruption rate. */
+  Glitch.tick(performance.now() * 0.001, stillFrames);
+  if (mirror && frames % 2 === 1) renderMirrorPass();
+  composer.render(dt);
+  updateHud();
+  frames++;
+
+  /* The reflection pass is the only cost here that scales with fill rate, so
+     it is the first thing dropped if a machine cannot hold ~30fps. */
+  if (mirror && frames > 60 && frames < 400) {
+    slowAcc += dt; slowN++;
+    if (slowN >= 60) {
+      if (slowAcc / slowN > 0.034) {
+        mirror.overlay.visible = false;
+        mirror = null;
+      }
+      slowAcc = slowN = 0;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ boot */
+
+async function boot() {
+  if (location.protocol === 'file:') {
+    fatal('Please serve this folder over HTTP — e.g. open a terminal in it and run:  python -m http.server 8080 — then visit http://localhost:8080');
+    return;
+  }
+  if (!initRenderer()) return;
+  initScene();
+  loadStep('Quarrying the marble');
+  await nextFrame();
+  const mats = M.buildMaterials(renderer, A.mulberry32(4));
+  initLights();
+  loadStep('Raising the galleries');
+  await nextFrame();
+  buildRoom(mats);
+  buildFloor(mats);
+  await placePaintings(mats);
+  loadStep('Setting the lights');
+  await nextFrame();
+  rig = new CR.CameraRig(camera, CR.defaultKeys(), paintings, { damping: 7.5 });
+  initPost();
+  rig.smoothP = scrollP;
+  rig.update();
+  initScroll();
+  dom.load.classList.add('gone');
+  window.addEventListener('resize', applySize, { passive: true });
+  loop();
+}
+
+boot().catch(err => {
+  console.error(err);
+  fatal('Could not build the gallery: ' + err.message);
+});
+
+window.MuseumApp = {
+  get state() { return { scrollP, rig, paintings, camera, scene, renderer, mirror }; },
+  jumpTo(p) {
+    scrollP = clamp(p, 0, 1);
+    rig.smoothP = scrollP;
+  }
+};
+
+})();

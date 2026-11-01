@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portfolio — Works &amp; Internships</title>
+<meta name="description" content="Eleven projects and internships, filterable by hiring package — fullstack, AI, cloud, security, networks — and by the skills each one actually uses.">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 0h14l5 5v14l-5 5H5l-5-5V5z' fill='%2306070a' stroke='%23ffd23f'/%3E%3Cpath d='M8 12h8M12 8v8' stroke='%23ffd23f' stroke-width='1.4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+  <div class="bg-scan"></div>
+</div>
+
+<a class="skip" href="#app">Skip to content</a>
+
+<header class="top" id="top">
+  <a class="brand" href="#/" aria-label="Portfolio home">
+    <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 0h14l5 5v14l-5 5H5l-5-5V5z"/><path d="M8 12h8M12 8v8"/></svg>
+    <span class="brand-word">PORTFOLIO<span class="brand-dim">/2026</span></span>
+  </a>
+  <nav class="top-nav" aria-label="Primary">
+    <a href="#/" class="nav-link" data-nav="works">Works</a>
+    <a href="#/certs" class="nav-link" data-nav="certs"><span class="nav-full">Certifications</span><span class="nav-abbr">Certs</span></a>
+    <a href="#/shelf" class="nav-link" data-nav="skills">Skills</a>
+    <a href="#/about" class="nav-link" data-nav="about">About</a>
+    <a href="#/contact" class="nav-link" data-nav="contact">Contact</a>
+    <a class="btn btn-museum cut cut-4" href="../index.html" title="Walk the 3D gallery">
+      <span class="face">Museum <span class="arr" aria-hidden="true">↗</span></span>
+    </a>
+  </nav>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<!-- filled by renderFooter() in app.js from SITE.contact -->
+<footer class="foot">
+  <div class="foot-inner">
+    <p class="foot-line">Mohamed Amine Chafik — cybersecurity engineering student, secure software developer. Every number on these pages was read off the project itself.</p>
+  </div>
+</footer>
+
+<div class="tip" id="tip" role="tooltip" hidden>
+  <div class="tip-head"><span class="tip-cat" id="tip-cat"></span><span class="tip-name" id="tip-name"></span></div>
+  <p class="tip-note" id="tip-note"></p>
+  <div class="tip-ev"><span class="tip-ev-label">evidence</span><code id="tip-ev"></code></div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

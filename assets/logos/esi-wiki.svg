@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ESI Wiki">
+  <!-- the app's gold serif E (Cormorant Garamond on the live site) -->
+  <defs>
+    <filter id="gold" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#e3b53f" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+  <text x="32" y="47" text-anchor="middle" filter="url(#gold)"
+        font-family="'Cormorant Garamond', Georgia, 'Times New Roman', serif"
+        font-weight="500" font-size="44" fill="#e3b53f">E</text>
+</svg>

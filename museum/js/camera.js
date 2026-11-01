@@ -1,0 +1,339 @@
+;(function(){
+/* Scroll-driven camera rig.
+   The visitor's pose is a pure function of scroll progress: each keyframe stores
+   a dolly frame (derived from the painting it studies) plus a look bearing.
+   Dollies ride a CatmullRom curve; bearings are interpolated in unwrapped angle
+   space. Scroll is divided between walking and standing still, so the rig
+   reaches a picture, squares up to it, holds while the wheel keeps turning, and
+   then releases and moves on. */
+'use strict';
+
+const smooth = t => t * t * (3 - 2 * t);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const mix = (a, b, t) => a + (b - a) * t;
+
+/* turn-then-settle easing: the bearing keeps reading the current picture for
+   `dwell` of a move, then eases onto the next one */
+function holdEase(t, dwell) {
+  const h = dwell === undefined ? 0.28 : dwell;
+  return smooth(clamp((t - h) / (1 - h), 0, 1));
+}
+
+function unwrap(angles) {
+  const out = [angles[0]];
+  for (let i = 1; i < angles.length; i++) {
+    let a = angles[i];
+    const prev = out[i - 1];
+    while (a - prev > Math.PI) a -= 2 * Math.PI;
+    while (a - prev < -Math.PI) a += 2 * Math.PI;
+    out.push(a);
+  }
+  return out;
+}
+
+class CameraRig {
+
+  /** keys: see defaultKeys() — each entry is either an explicit `origin` frame or
+   *  a painting frame addressed by { wall, idx }. */
+  constructor(camera, keys, paintings, opts) {
+    this.camera = camera;
+    this.keys = keys;
+    this.paintings = paintings;
+    this.opts = opts || {};
+    this.smoothP = 0;
+    this.bearing = 0;
+    this._v = new THREE.Vector3();
+    this._look = new THREE.Vector3();
+    this.build();
+  }
+
+  _painting(wall, slot) {
+    return this.paintings.find(p => p.wall === wall && p.slot === slot);
+  }
+
+  build() {
+    /* narrow screens stand further back from the wall so a picture still fits */
+    const aspect = (this.opts.aspect || (window.innerWidth / window.innerHeight));
+    const narrow = clamp((1.35 - aspect) / 0.9, 0, 1);
+    const posKeys = [], bearings = [], pitch = [], fovs = [], focus = [], sides = [];
+
+    for (const k of this.keys) {
+      if (k.origin) {
+        posKeys.push(new THREE.Vector3(k.origin[0], k.origin[1], k.origin[2]));
+        bearings.push(k.bearing * Math.PI / 180);
+        /* a look-about frame writes its elevation in degrees the way it writes
+           its bearing; a picture frame's is computed in radians off the canvas */
+        pitch.push((k.pitch || 0) * Math.PI / 180);
+        fovs.push(k.fov);
+        focus.push(null);
+        sides.push(0);
+        continue;
+      }
+      const p = this._painting(k.wall, k.idx);
+      if (!p) throw new Error('camera key references unknown painting ' + k.wall + k.idx);
+      const isF = p.wall === 'F';
+      /* the picture's centre in plan, and the two axes it hangs on: `out` runs
+         from the wall into the room, `lat` runs along the wall */
+      const px = isF ? 0 : p.side * Museum.ROOM.wallX;
+      const out = isF ? [0, 1] : [-p.side, 0];
+      const lat = isF ? [1, 0] : [0, 1];
+      const reach = (k.reach === undefined ? 2.35 : k.reach) * (1 + narrow * 0.55);
+      /* a stop stands on the picture's own normal — ninety degrees to the wall,
+         the way a visitor squares up to a canvas. Only the approach frame before
+         it slides along the wall, so the picture is met at an angle and then
+         taken square. */
+      const dz = k.square ? 0 : (k.lateral === undefined ? 0.5 : k.lateral);
+      /* How much of the wall the lens has to hold, as a width and a height in
+         metres. The held stop takes in the whole framed picture — canvas, the
+         moulding round it, the plaque below and the light bar above, which
+         stands ~0.34 m clear of the canvas edge. The approach frame adds a
+         strip of wall either side so the picture reads as hanging in a room.
+         Both are derived from the picture's real size, so the framing survives
+         a change of artwork or window shape. */
+      const boxW = k.fit ? p.w + 0.6 : p.w + 1.0;
+      const boxH = k.fit ? p.h + 1.04 : p.h + 1.5;
+      /* A held stop is a composition as well as a framing: `align` hands the
+         canvas one half of the screen and leaves the other to the label, so the
+         picture band keeps only `frac` of the frame's width. Off-centre shots
+         need a wider hold than centred ones — the empty half has to be in the
+         frame rather than cropped off its edge. */
+      const align = (k.square ? k.align : 0) || 0;
+      /* on a tall screen there is no room for a column of text beside a canvas
+         — the card falls to the bottom instead — so the picture is barely
+         nudged off centre and keeps most of the frame */
+      const frac = clamp((k.frac || 0.62) + narrow * 0.26, 0.6, 0.9);
+      const need = Math.max(align ? boxW / frac : boxW, boxH * aspect);
+      /* rather step back than go wide-angle: a 24 mm view of a wall distorts
+         the frame and reads as a security camera, not a visitor */
+      const dx = Math.max(reach, need / (2 * Math.tan(26 * Math.PI / 180)));
+      const cy = k.height === undefined ? 1.6 : k.height;
+      /* `right` is the frame's own horizontal axis in plan. Sliding the visitor
+         along it moves the canvas across the screen without turning them: the
+         view stays square to the wall, the picture simply leaves its side. */
+      const right = isF ? [1, 0] : [0, p.side];
+      const off = -align * need * (1 - frac) / 2;
+      let cx = px + out[0] * dx + lat[0] * dz + right[0] * off;
+      let cz = p.z + out[1] * dx + lat[1] * dz + right[1] * off;
+      cx = clamp(cx, -(Museum.ROOM.halfW - 1.3), Museum.ROOM.halfW - 1.3);
+      cz = clamp(cz, Museum.ROOM.zBack + 1.2, Museum.ROOM.zFront - 1.2);
+      posKeys.push(new THREE.Vector3(cx, cy, cz));
+      sides.push(align);
+      /* the view runs straight at the wall for an off-centre stop, and straight
+         at the canvas for every frame that keeps the picture centred */
+      bearings.push(align ? Math.atan2(-out[0], out[1]) : Math.atan2(px - cx, cz - p.z));
+      /* vertical angle to the picture centre from here — dead centre, because
+         the approach box already leaves room above the frame for its light */
+      const dh = Math.hypot(cx - px, cz - p.z);
+      /* On a tall screen the card falls below the canvas instead of beside it,
+         so the held frame lifts the picture clear of the bottom of the screen. */
+      const lift = k.fit ? narrow * 0.115 : 0;
+      pitch.push(Math.atan2(p.cy - cy, Math.max(0.4, dh)) - lift);
+      /* the frame's width is measured in the plane of the wall, which sits a
+         perpendicular `dx` away whatever the lateral offset */
+      fovs.push(2 * Math.atan(need / (2 * Math.max(0.4, dx))) * 180 / Math.PI);
+      focus.push(p);
+    }
+
+    this.posKeys = posKeys;
+    this.bearings = unwrap(bearings);
+    this.pitch = pitch;
+    this.fovs = fovs;
+    this.focusKeys = focus;
+    this.sides = sides;
+    this.N = posKeys.length;
+
+    this.curve = new THREE.CatmullRomCurve3(posKeys, false, 'centripetal');
+    this.curve.getLengths(1200);              /* prime the arc-length table */
+
+    /* Scroll is spent two ways: walking, and standing still. A key's `hold` is
+       written in metres of walk, so the two weigh on the same scale — hold: 8
+       buys the visitor the same dwell as strolling eight metres. Without it the
+       camera is in transit past every picture and never actually in front of
+       one; with it the rig arrives, squares up, stays put for a good pull of
+       the wheel, then unlocks and turns away.
+       These are scroll fractions, not curve parameters: getPoint() runs in the
+       spline's native space, where control point i sits exactly at i/(N-1). */
+    const tl = [];
+    let total = 0;
+    for (let i = 0; i < this.N; i++) {
+      const h = this.keys[i].hold || 0;
+      if (h > 0) { tl.push({ kind: 'hold', i: i, w: h }); total += h; }
+      if (i < this.N - 1) {
+        const w = posKeys[i].distanceTo(posKeys[i + 1]) + 0.4;
+        tl.push({ kind: 'move', i: i, w: w }); total += w;
+      }
+    }
+    let acc = 0;
+    this.pKeys = new Array(this.N).fill(0);
+    for (const e of tl) {
+      e.a = acc / total; acc += e.w; e.b = acc / total;
+      if (e.kind === 'hold') this.pKeys[e.i] = e.a;
+      else this.pKeys[e.i + 1] = e.b;
+    }
+    this.tl = tl;
+  }
+
+  applyFov(fovHorizontal) {
+    const cam = this.camera;
+    const aspect = cam.aspect || 1;
+    const vfov = 2 * Math.atan(Math.tan(fovHorizontal * Math.PI / 360) / clamp(aspect, 0.3, 3));
+    const f = clamp(vfov * 180 / Math.PI, 26, 84);
+    if (Math.abs(cam.fov - f) > 0.002) {
+      cam.fov = f;
+      cam.updateProjectionMatrix();
+    }
+  }
+
+  update() {
+    const N = this.N;
+    const p = clamp(this.smoothP, 0, 1);
+    const tl = this.tl;
+    let e = tl[tl.length - 1];
+    for (let j = 0; j < tl.length; j++) if (p < tl[j].b - 1e-9) { e = tl[j]; break; }
+
+    let i, u, atEnd = 0;
+    if (e.kind === 'hold') {
+      /* the pose is frozen: the visitor is standing in front of the picture */
+      i = Math.min(e.i, N - 2);
+      atEnd = u = e.i >= N - 1 ? 1 : 0;
+    } else {
+      i = e.i;
+      u = clamp((p - e.a) / Math.max(1e-9, e.b - e.a), 0, 1);
+    }
+
+    /* dolly: eased so the walk starts and settles rather than snapping off a
+       stop, but kept part-linear so the visitor never seems to glide on rails */
+    const gait = e.kind === 'hold' ? u : mix(u, smooth(u), 0.62);
+    this.curve.getPoint((i + gait) / (N - 1), this._v);
+    /* a centripetal spline can bulge past its end points; never let the visitor
+       end up inside the plaster */
+    this._v.x = clamp(this._v.x, -(Museum.ROOM.wallX - 0.6), Museum.ROOM.wallX - 0.6);
+    this._v.z = clamp(this._v.z, Museum.ROOM.zBack + 0.9, Museum.ROOM.zFront - 0.9);
+
+    /* look: the dwell is the timeline's job; this only keeps the bearing reading
+       the current picture for the first stretch of the move before it turns.
+       A hold freezes its own key's pose, and the dolly above reads the final
+       frame off the *end* of the segment behind it — so the orientation has to
+       follow it there, or the coda would hold the bearing it arrived on instead
+       of the ceiling it came for. */
+    const ev = e.kind === 'hold' ? atEnd : holdEase(u, 0.22);
+    const bearing = mix(this.bearings[i], this.bearings[i + 1], ev);
+    const pit = mix(this.pitch[i], this.pitch[i + 1], ev);
+    /* a spherical look: the horizontal reach narrows as the elevation climbs,
+       so a pitch of ninety degrees is genuinely straight up rather than the
+       forty-five it would fold into at full radius. Every picture beat pitches
+       by only a few degrees, where the old flat form was already a good enough
+       approximation that the framing does not move. */
+    const R = 6, sb = Math.sin(bearing), cb = Math.cos(bearing);
+    const sp = Math.sin(pit), cp = Math.cos(pit);
+    this._look.set(
+      this._v.x + sb * cp * R,
+      this._v.y + sp * R,
+      this._v.z - cb * cp * R);
+
+    this.camera.position.copy(this._v);
+    /* up has to travel with the pitch. World up goes parallel to the view as the
+       lens comes vertical and lookAt() rolls the frame on its own; this is the
+       elevation direction of the same sphere, which keeps the ground the visitor
+       walked over falling to the bottom of the screen as the ceiling rises. */
+    this.camera.up.set(-sb * sp, cp, cb * sp);
+    this.camera.lookAt(this._look);
+    this.applyFov(mix(this.fovs[i], this.fovs[i + 1], ev));
+    this.bearing = bearing;
+    this.segment = i;
+    this.segmentT = u;
+    /* how far above the horizon the lens is pointing, in degrees: the coda's
+       bleach is written as a function of the tilt, so the plaster cannot finish
+       whitening before the ceiling has arrived, however the beats are weighted */
+    this.pitchDeg = pit * 180 / Math.PI;
+    this.holding = e.kind === 'hold';
+    /* which half of the screen the canvas is standing in, for the label */
+    this.frameSide = this.holding ? (this.sides[e.i] || 0) : 0;
+  }
+
+  /* painting the visitor is looking at, for captions and the tracking light */
+  focusPainting() {
+    const i = this.segment === undefined ? 0 : this.segment;
+    const t = this.segmentT || 0;
+    const a = this.focusKeys[i], b = this.focusKeys[i + 1];
+    const nearer = t < 0.5 ? a : b;
+    if (nearer) return nearer;
+    /* a look-about frame between two picture beats: name whatever the visitor
+       is standing in front of — the picture closest to the centre of the view,
+       not the closest to them, and only one large enough in the view to be the
+       subject. A daub at the far end of the room is in shot without being
+       looked at. */
+    const c = this.camera.position;
+    let best = null, bs = 0.8;
+    for (const p of this.paintings) {
+      const dx = p.side * Museum.ROOM.wallX - c.x, dz = p.z - c.z;
+      const d = Math.hypot(dx, dz);
+      if (d > 14) continue;
+      /* ~11° across: a picture smaller than that in the view is scenery */
+      if (2 * Math.atan(Math.max(p.w, p.h) / (2 * d)) < 0.2) continue;
+      const dot = (dx * Math.sin(this.bearing) - dz * Math.cos(this.bearing)) / d;
+      if (dot > bs) { best = p; bs = dot; }
+    }
+    /* no caption rather than the next stop's caption */
+    return best;
+  }
+
+  tick(dt, scrollP) {
+    const k = 1 - Math.exp(-(this.opts.damping || 7.5) * dt);
+    this.smoothP += (scrollP - this.smoothP) * k;
+    this.update();
+  }
+}
+
+/* ---------------------------------------------------------------- keyframes */
+
+/* One pair of frames per picture: an approach met at an angle while still
+   walking, then the stop itself — dead square to the wall, and held.
+   `side` is the half of the screen the canvas keeps, -1 left and +1 right; the
+   label takes the other half, so the room alternates its reading like a book. */
+function stop(wall, idx, reach, hold, side, frac) {
+  return { wall: wall, idx: idx, reach: reach, square: true, fit: true,
+           hold: hold, align: side, frac: frac };
+}
+function approach(wall, idx, reach, lateral) {
+  return { wall: wall, idx: idx, reach: reach, lateral: lateral };
+}
+
+function defaultKeys() {
+  return [
+    /* inside the entrance, wide, both walls readable */
+    { origin: [0, 1.62, 21.6], bearing: 2, fov: 62 },
+    { origin: [0.6, 1.62, 17.2], bearing: -14, fov: 60 },
+
+    /* the front half of the room */
+    approach('L', 10, 3.1, 3.2), stop('L', 10, 2.4, 8, -1),
+    approach('R', 8, 3.0, 3.2), stop('R', 8, 2.3, 8, 1),
+
+    /* the deep half, alternating walls so the visit keeps turning */
+    approach('L', 0, 3.0, 3.0), stop('L', 0, 2.2, 8, -1),
+    approach('R', 2, 3.0, 3.0), stop('R', 2, 2.6, 8, 1),
+    approach('L', 4, 3.2, 3.0), stop('L', 4, 2.5, 8, -1),
+    approach('R', 5, 3.0, 2.8), stop('R', 5, 2.5, 8, 1),
+
+    /* off the last right-hand wall, the axis opens and the end of the room is
+       in view long before the visitor reaches it */
+    { origin: [2.2, 1.66, -21.2], bearing: -9, fov: 58, hold: 2.5 },
+
+    approach('F', 0, 6.4, 2.6), stop('F', 0, 4.6, 13, -1, 0.66),
+
+    /* the coda. There is no turn in it: the bearing stays on the far wall for
+       the whole tail, so the visitor does three things and nothing else — walk
+       straight back off the wall they have been standing in front of, slide onto
+       the room's axis so the canvas centres itself, and let the body sag as the
+       head lifts. The quarter turn is all pitch; it is held shallow over the
+       first two moves so the climb reads as a lean back along the plaster, and
+       only spends itself on the ceiling at the end. */
+    { origin: [0.9, 1.60, -22.0], bearing: 0, pitch: 5, fov: 62 },
+    { origin: [0.45, 1.52, -19.9], bearing: 0, pitch: 26, fov: 66 },
+    { origin: [0.0, 1.42, -17.8], bearing: 0, pitch: 90, fov: 74, hold: 7 }
+  ];
+}
+
+window.CameraRig = { CameraRig, defaultKeys, smooth, clamp, mix, holdEase };
+
+})();

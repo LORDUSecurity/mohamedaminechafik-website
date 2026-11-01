@@ -1,0 +1,1014 @@
+;(function(){
+/* The corruption, as a physical event.
+
+   A tear is real absence: the canvas, its frame and the wall behind it all
+   stop existing inside one shattered outline, so the camera looks *into* the
+   break rather than at a picture of one. Hung directly behind the canvas,
+   exactly aligned with it, is a black-and-white bitmap duplicate of the same
+   image — the tear reveals it, cell for cell, where the paint has gone.
+   Beyond the wall there is nothing at all: a matte black plate, deep in the
+   structure, is the floor of the void.
+
+   The break is never idle and never frantic: it re-cuts on one slow, steady
+   beat, once every four seconds — slow enough that the wall label stays the
+   thing worth looking at. A cut does not redraw the tear. The wound belongs to
+   the picture — its bearing, its boxes, how far they reach — and what a cut
+   changes is its edge: which hairlines are missing and how far each one runs,
+   walked through seven fixed states, while the whole mass works a few
+   centimetres further along the direction it was already torn in. So the break
+   frays and travels like something under tension instead of rolling a new
+   silhouette at a new angle every four seconds. Nothing interpolates — a glitch
+   changes state, it does not travel.
+
+   On top of that beat the break flinches: one or two spasms in a window, each
+   one reflex rather than a flicker -- a hard first frame that drags whole
+   bands of the bitmap ghost one way, a settle part of the way back, and a
+   short counter-move before the screen is still. Nothing blanks and nothing
+   gets brighter: a dropped frame reads as a crashed app, and the user's word
+   for it was exactly that. A spasm is a misfire of position only.
+   The edge of the absence keeps its own rate, so the tear never twitches its
+   shape between cuts.
+
+   The ghost's white is driven past the bloom threshold, with its three channels
+   read from three slightly different places and a cyan-violet bleed thrown past
+   each cell — neon on a 1-bit screen. Its damage is baked in: sheared scanline
+   bands, dropped and fused runs, stray flipped pixels, all thrown from the
+   work's own seed so it is the same damage every time the room is hung.
+
+   One silhouette function, compiled into two places: the discard test patched
+   into the scene's own materials (which cuts the holes) and the additive quad
+   hung in front of each picture (which draws the light). They share CHUNK, so
+   the light always lands exactly on the edge of the absence. */
+'use strict';
+
+const MAX = 8;
+
+/* The break's own light, and the neon on the bitmap duplicate, live behind this
+   one lever (2026-10-24: "remove neon effects in bitmap for now so i can see it
+   well, we may reverse it after confirming the tear" -- the tear was confirmed
+   the same day and it is back on). At 0 the fringe quad is never built and
+   GHOST_FRAG's #if NEON blocks take out the three-tap chromatic split, the
+   cyan/violet corona and the uNeon HDR scale together. */
+const NEON = 1;
+
+/* How far out the silhouette can possibly reach, as a multiple of the radius.
+   The cut, the void plate and the light quad all have to cover at least this
+   much, and if any one of them falls short the break gets clipped to a circle
+   or loses its black backing. It is arithmetic, not taste: the furthest a
+   stroke can end is a box centre's offset plus its own half side plus the
+   longest reach from there -- SPAN + 4 * SIDE cells -- which at 90 and 160 is
+   730 cells, 3.65 times the radius, and this leaves a margin on that. The cut
+   walks along its own bearing by up to a tenth of a radius, which has to come
+   out of the same margin. It is one
+   constant because the three uses have to agree -- and because the void plate is
+   sized off it, so raising it grows a black slab that pokes past the wall panel
+   it hides behind and reads as a hole in the room rather than in the picture. */
+const COVER = 3.85;
+
+/* Bearings on offer, counted in eighths of a half turn: four gives 0, 45, 90
+   and 135 degrees. One is drawn for the whole break, so every box agrees with
+   the others and the mass reads as drawn in two directions. It is a JS constant
+   because tick() has to know which way a tear runs in order to walk it along
+   its own axis, and the shader and the walk have to agree exactly. */
+const DIRS = 4;
+
+/* ------------------------------------------------------------- the palette
+
+   Every break is lit in the colour of the picture it destroys, and in *one*
+   colour: the duplicate's dots, the corona they bleed and both lobes of the
+   neon on its edge all take their hue from `hue` on the work's own glitch entry
+   and differ only in how much light they carry. Three separations round the
+   wheel were tried and dropped in turn -- the corona opposite the plate, the
+   edge's outer lobe a quarter turn back, and finally both a neighbour 25 degrees
+   off -- and all three put a second colour on the tear, the last of them a
+   violet-pink corona and rim on the deep blue Dalí (tools/n_dali), because a step
+   from blue toward violet raises red fast. Nothing is mixed toward white either:
+   a hue lifted for brightness is a hue diluted, and that is the wash the user's
+   "make it clear" is about.
+
+   What is *not* allowed to vary is how much light a break puts out. A
+   saturated hue has low luminance -- a pure red carries a third of what white
+   does -- so a tint that is merely multiplied would leave a red tear dim and a
+   green one blazing. Each colour is therefore levelled to a luminance target,
+   with a ceiling on the boost so a hue cannot drive its own peak past where the
+   blown-out sheet started. The plate sits *under* the white it replaces rather
+   than at it: at parity every lit cell crosses the bloom threshold, and the
+   bloom that comes back over the field is white, which desaturates the whole
+   screen back to the pale wash the hue was meant to replace (the first green
+   Van Gogh, tools/hue3_vang). The shipped numbers below are the neutral case,
+   and a work with no hue -- or a near-neutral one, like the Wanderer's white --
+   keeps them exactly as they are. */
+const LUM = [0.299, 0.587, 0.114];
+const lumOf = c => c[0] * LUM[0] + c[1] * LUM[1] + c[2] * LUM[2];
+const s2l = v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+const NEUTRAL = { tint: [1, 1, 1], bleed: [0.307, 0.278, 0.614],
+                  rimA: [1.5, 0.05, 0.22], rimB: [0.05, 0.35, 1.6] };
+/* the light each of the three slots is allowed to carry, taken off the shipped
+   neutral so a coloured work cannot out-glow the one already approved. Dropping
+   the plate to 0.72 to pull the pale cores of the green and the blue back under
+   the bloom threshold barely moved them: a core is pale because that is where the
+   picture itself is bright, not because the plate is loud. */
+const AT = { tint: 0.85, bleed: lumOf(NEUTRAL.bleed),
+             rimA: lumOf(NEUTRAL.rimA), rimB: lumOf(NEUTRAL.rimB) };
+/* the ceiling on any one channel. A hue whose luminance weight is tiny needs an
+   enormous number in that channel to reach the plate's target -- a deep royal
+   blue carries 0.114 of the three weights, so parity asks for B = 7.4, and pure
+   red carries 0.299, so parity asks for R = 2.84 -- and the tone curve is what
+   makes that the wrong answer: a channel that far above 1 is crushed toward
+   white while the hue's smaller channels ride the near-linear part of the curve,
+   so chasing luma parity is precisely how a deep blue turns into a pale sky and
+   a red turns into salmon. The cap keeps a deep hue deep and lets it give up
+   brightness it could never have shown as colour.
+   Set from the room rather than from a taste: the seven hues that hung here all
+   reach their target by luminance, at a dominant channel of 1.17 to 1.42, so a
+   ceiling at that top binds nothing that is already shipped and binds only a
+   primary -- which is the whole point, since a work's hue is meant to read as
+   itself at every level, not as the brightest thing in the gallery. */
+const PEAK = 1.4;
+
+function scaleTo(c, target) {
+  const k = Math.min(target / Math.max(lumOf(c), 1e-4),
+                     PEAK / Math.max(c[0], c[1], c[2], 1e-4));
+  return [c[0] * k, c[1] * k, c[2] * k];
+}
+
+/** The colours one work corrupts in: its own hue, at the four levels the plate,
+    the corona and the two lobes of its edge light each carry. Nothing here is a
+    second hue -- see the note above on the neighbour that was tried and dropped. */
+function palette(hex) {
+  if (hex === undefined) return NEUTRAL;
+  const c = new THREE.Color().setRGB(s2l(((hex >> 16) & 255) / 255),
+                                     s2l(((hex >> 8) & 255) / 255),
+                                     s2l((hex & 255) / 255),
+                                     THREE.LinearSRGBColorSpace);
+  /* A work that names no hue keeps the red and violet pair the layer shipped
+     with. A work that names white is a different thing and gets what it asked
+     for: the four levels are one triple at four gains, so a colourless hue has
+     to stay colourless all the way down to the edge light, or the plate reads
+     as a corrupted display rather than as a white one. */
+  const own = [c.r, c.g, c.b];
+  return { tint: scaleTo(own, AT.tint), bleed: scaleTo(own, AT.bleed),
+           rimA: scaleTo(own, AT.rimA), rimB: scaleTo(own, AT.rimB) };
+}
+
+const v3 = a => new THREE.Vector3(a[0], a[1], a[2]);
+
+/* --------------------------------------------------------- the silhouette */
+
+const CHUNK = `
+#define TAU 6.2831853
+#define TEARPI 3.14159265
+/* The break is drawn on a grid this fine, as a fraction of its own radius. One
+   cell is a pixel of the grid, so a line one cell across is a hairline: at the
+   Joconde's radius and 4K that is a two pixel stroke. */
+#define CELL 0.005
+/* Boxes, and the combs that go off at an angle nobody else took. Every box
+   costs four combs, every comb three hashes per fragment of every patched
+   material in the room, so this is the corruption layer's frame budget. */
+#define NRECT 5
+#define NLONE 2
+/* Hairlines per comb, the pitch from line to line, and how much of that pitch
+   the line itself eats. The pitch is what buys the count: a filled comb is a
+   hundred and ninety eight cells deep, and at two and a half cells of pitch that
+   is over eighty strokes down one side of a box, which is the density the tear
+   needs to read as one body rather than as a handful of rules. The line is nearly
+   the whole pitch so neighbours that run the same way touch and fuse into one
+   stroke rather than a row of separate hairs, and what is left between them -- two
+   fifths of a cell, about a millimetre at the Joconde's radius -- is a hairline of
+   surviving canvas. It used to be a groove a cell and a half wide, and a groove
+   that wide lets the picture's own colours stripe across the break: Hokusai's beige
+   paper and Dalí's ochre sand read through the teal and the blue as the last thing
+   on the tear that was not the work's hue. Taking the groove down to a hairline
+   costs the stroke its texture and gives the field its colour; the varying lengths
+   that make the edge do their work are untouched, because they are at the edge. */
+#define ROWS 400.0
+#define PITCH 2.4
+#define WID 2.0
+/* Half sides, in cells. A hundred and sixty is 0.8 R, so one box is wider than
+   the picture and crosses the moulding; seventy is the shortest side that still
+   reads as a box and not a scratch, and the user's standing note is that all of
+   it has to be big and centred on the core. */
+#define SIDE 160.0
+#define SHRT 70.0
+/* How far off the impact a box's centre may sit, in cells. At twenty five every
+   box was within ten centimetres of the burst and they printed on top of one
+   another, so the mass covered one patch of the picture however many there
+   were. Ninety is a little over half a box's own half side, which is what
+   spreads them across the canvas and lets the break take the space. It is also
+   the term that pushes COVER up, because a stroke's reach is measured from the
+   far corner of the box it hangs on. */
+#define SPAN 90.0
+/* How many of a comb's lines simply are not there, leaving the edge broken. A
+   missing line is a whole groove wide, so this is what puts the picture's own
+   bitmap on show across the break. */
+#define GAPPROB 0.15
+#define DIRS ${DIRS}.0
+
+uniform mat4 uTearM[${MAX}];   /* world -> picture plane, in metres */
+uniform vec2 uTearP[${MAX}];   /* radius, the break's own structure seed */
+uniform vec2 uTearC[${MAX}];   /* where the break starts, in picture coords */
+uniform int uTearCount;
+/* Which of the seven edge states the room is in right now. One scalar for the
+   whole scene, because every break re-cuts on the same beat. It is the only
+   thing a cut changes: the silhouette's structure -- its bearing, where its
+   boxes sit, how big they are -- belongs to uTearP.y and never moves, so a cut
+   re-frays the edge of the same wound instead of rolling a new tear at a new
+   angle. Set back to 0 by tick when the room is frozen. */
+uniform float uCut;
+
+float tearHash(float n) { return fract(sin(n * 12.9898) * 43758.5453); }
+
+/* Exact signed distance to the edge of one rectangle, negative inside, with u
+   along its length and v across. Turning the sample point into the
+   rectangle's own frame keeps the distance exact however the box is rotated, so
+   the fringe light still lands on the edge on a diagonal -- which is the only
+   reason the bearings can offer more than two directions, or one stroke be
+   allowed to go anywhere, without losing the clean outline. */
+float tearRect(vec2 p, vec2 c, vec2 h, vec2 u, vec2 v) {
+  vec2 d = abs(vec2(dot(p - c, u), dot(p - c, v))) - h;
+  return max(d.x, d.y);
+}
+float tearRect(vec2 p, vec2 c, vec2 h) {
+  return tearRect(p, c, h, vec2(1.0, 0.0), vec2(0.0, 1.0));
+}
+
+/* One side of a box: hairlines laid side by side, all starting on the same line
+   and each running a different distance, a few of them running nowhere at all.
+   The edge they start from is straight and the edge they end on is a row of tips
+   at different reaches, which is what makes the box read as drawn in one stroke
+   and then left off. This is the cut -- the picture is absent wherever a line
+   is, and the bitmap behind shows through the grooves and through the rows that
+   are missing.
+   The rows are numbered on the break's own grid, not on the comb's: q measures
+   from the origin instead of from the corner. That is what lets a line of one
+   box and a line of the next box, both running the same way, be the SAME row --
+   so same-direction strokes join into one long line across the mass instead of
+   stopping and starting at every box. A comb is still only the strip it was
+   given, which is bounded by q0 and q0 + rows.
+   Nothing enumerates the hairlines, and that is the point. A fragment can only
+   be inside its own row or its two neighbours, so the distance is had by
+   hashing those three for their length and their survival and taking the
+   nearest. Six hashes instead of a hundred boxes is what lets the break carry
+   two hundred lines on every fragment of the room. */
+float tearBand(vec2 P, vec2 c, vec2 u, vec2 v, float rows,
+               float lo, float hi, float sd) {
+  float a = dot(P - c, u);                /* along the lines */
+  float q = dot(P, v) / PITCH;            /* which line, counted globally */
+  float q0 = dot(c, v) / PITCH;           /* where this comb's strip starts */
+  float w = WID / PITCH;
+  float d = 1e9;
+  for (int k = -1; k <= 1; k++) {
+    float r = floor(q) + float(k);
+    if (r < q0 || r > q0 + rows) continue;
+    if (tearHash(r * 37.1 + sd * 2.7) < GAPPROB) continue;
+    float len = lo + (hi - lo) * tearHash(r * 91.3 + sd * 5.1);
+    d = min(d, max(max(-a, a - len), max(q - (r + w), r - q) * PITCH));
+  }
+  return d;
+}
+
+/* The break as boxes drawn in hairlines: a short block on the impact, NRECT
+   boxes all sharing one bearing, and NLONE combs that went off at an angle
+   nobody else took. Each box's four sides start at their own corner and run
+   towards the next, so a corner is where two combs meet and the mass holds
+   together while its far ends are wherever the lines happened to stop. Boxes
+   overlapping at the same bearing double their lines up, which is what makes
+   the middle of the break heavier than its edge.
+   The strokes run past the box that drew them -- one and a half to two and a
+   half times the half side -- so a line that leaves a corner arrives inside the
+   next box and lies along one of its rows, and the figure reads as long joined
+   strokes rather than as separate boxes.
+   Two seeds, and the split between them is the animation. st is the wound:
+   its bearing, how many boxes there are, how big each is and where it sits.
+   sd is the fraying edge: which rows are simply absent and how far each
+   stroke runs. A cut moves sd and nothing else, so the break keeps the shape
+   the viewer has been reading and its tips change -- which is what a torn
+   canvas actually does under its own weight. When one seed drove both, every
+   cut re-drew the whole mass at a new angle, and the user's word for it was
+   that it changed direction at random. A tear has one direction. */
+float tearField(vec2 p, float R, float st) {
+  float sd = st + uCut * 13.79;
+  float g = R * CELL;
+  vec2 P = p / g;
+  float d = tearRect(P, vec2(0.0), vec2(6.0, 6.0));
+  float th = floor(tearHash(7.3 + st * 1.7) * DIRS) * (TEARPI / DIRS);
+  vec2 u = vec2(cos(th), sin(th)), v = vec2(-sin(th), cos(th));
+  for (int i = 0; i < NRECT; i++) {
+    float s = float(i) + 1.0;
+    float hx = SHRT + floor(tearHash(s * 13.7 + st * 2.9) * (SIDE - SHRT));
+    float hy = SHRT + floor(tearHash(s * 15.1 + st * 4.1) * (SIDE - SHRT));
+    vec2 c = u * (tearHash(s * 3.1 + st * 5.7) * 2.0 - 1.0) * SPAN
+           + v * (tearHash(s * 4.7 + st * 8.3) * 2.0 - 1.0) * SPAN;
+    /* One direction fills the box, the other only stitches its ends. That is the
+       whole difference between a tear and a screen: combs deep enough to meet in
+       the middle are what makes the mass read as one body rather than as four
+       floating rules, but two of them crossing is a mesh, and a mesh at this
+       pitch has no room left for the picture behind it. So the sides running
+       along u fill most of the way across -- their depth is measured in the
+       box's own hy, and the two of them overlap past the centre so the rows of
+       one continue the rows of the other -- while the sides running along v stop
+       at a tenth, which leaves the cross direction to the ends, where it reads
+       as the stitching a real tear leaves.  At a fifth of the box the two cross
+       directions still met often enough -- five boxes over SPAN 90 put three or
+       four combs through the same patch -- and where they met the lattice had
+       no groove left in it, so the break printed as solid slabs with the
+       picture gone. Halving the stitch costs the ends almost nothing, since
+       they were only ever a handful of rows, and it clears the middle.
+       A stroke runs 1.6 to 3.0 times the half side. The floor is what keeps the
+       mass one body: two opposing combs have to overlap through the middle or it
+       splits down its own centre line. The ceiling is the reach that crosses the
+       moulding and keeps going, which is what the break is meant to do -- at
+       1.05 to 1.9 the tails all stopped short of the opposite comb's anchor, so
+       that anchor became the silhouette and the mass read as four stacked
+       rotated rectangles. Long tails cost cuts on bare wall; that is the trade,
+       and the reach is what buys the shape. */
+    float rv = max(3.0, min(ROWS, floor(hy * 1.24 / PITCH)));
+    float ru = max(3.0, min(ROWS, floor(hx * 0.18 / PITCH)));
+    d = min(d, tearBand(P, c - u * hx + v * hy, u, -v, rv,
+                        1.6 * hx, 3.0 * hx, sd + s));
+    d = min(d, tearBand(P, c + u * hx + v * hy, -v, -u, ru,
+                        1.6 * hy, 3.0 * hy, sd + s * 2.0));
+    d = min(d, tearBand(P, c + u * hx - v * hy, -u, v, rv,
+                        1.6 * hx, 3.0 * hx, sd + s * 3.0));
+    d = min(d, tearBand(P, c - u * hx - v * hy, v, u, ru,
+                        1.6 * hy, 3.0 * hy, sd + s * 4.0));
+  }
+  for (int k = 0; k < NLONE; k++) {
+    float ks = float(k) + 1.0;
+    float a2 = tearHash(ks * 19.9 + st * 6.3) * TAU;
+    vec2 u2 = vec2(cos(a2), sin(a2)), v2 = vec2(-sin(a2), cos(a2));
+    vec2 c2 = u * (tearHash(ks * 5.1 + st * 7.3) * 2.0 - 1.0) * SPAN
+            + v * (tearHash(ks * 8.9 + st * 2.1) * 2.0 - 1.0) * SPAN;
+    float rs = 4.0 + floor(tearHash(ks * 23.7 + st * 1.3) * 9.0);
+    /* a lone has no box to be the side of, so it is simply the block its own
+       strokes fill: as long as the reach of a comb, as deep as its rows */
+    d = min(d, tearBand(P, c2, u2, v2, rs,
+                        20.0, SIDE * 1.5, sd + ks * 7.0));
+  }
+  return d * g;
+}`;
+
+/* The cut itself. `bev` opens the hole very slightly as it goes forward, so
+   the break is a shallow cone rather than a punched prism and reads as depth
+   when the camera meets a wall at an angle. It scales the point, not the
+   distance: a signed distance keeps its sign under a positive scale, so the
+   only way to widen a box is to shrink the space it is measured in.
+   The slab test is what keeps the break where the picture hangs: a tear is an
+   absence in the canvas and in the wall directly behind it, not a field that
+   the far side of the room also has to stand.
+   The cut is the hairlines themselves, and everything the camera sees through
+   is the bitmap hanging flat behind the canvas. */
+const CUT = `
+void tearCut(vec3 wp) {
+  for (int i = 0; i < ${MAX}; i++) {
+    if (i >= uTearCount) break;
+    vec3 q = (uTearM[i] * vec4(wp, 1.0)).xyz;
+    if (q.z < -0.62 || q.z > 0.40) continue;
+    vec2 d = q.xy - uTearC[i];
+    if (length(d) > uTearP[i].x * ${COVER}) continue;
+    float bev = 1.0 + 0.14 * clamp(q.z, -0.6, 0.4);
+    if (tearField(d / bev, uTearP[i].x, uTearP[i].y) < 0.0) discard;
+  }
+}
+`;
+
+const uniforms = {
+  uTearM: { value: Array.from({ length: MAX }, () => new THREE.Matrix4()) },
+  uTearP: { value: Array.from({ length: MAX }, () => new THREE.Vector2(0, 0)) },
+  uTearC: { value: Array.from({ length: MAX }, () => new THREE.Vector2(0, 0)) },
+  uTearCount: { value: 0 },
+  /* shared by every patched material and every light quad, so one write per
+     frame re-cuts the whole room at once */
+  uCut: { value: 0 }
+};
+
+/* the shape each break returns to, and the light quads that trace it */
+const base = [];
+const fringes = [];
+const ghosts = [];
+
+/** Register one picture's break. Call once the group is where it hangs. */
+function register(group, e) {
+  const i = uniforms.uTearCount.value;
+  if (i >= MAX) return;
+  group.updateWorldMatrix(true, false);
+  const m = new THREE.Matrix4().copy(group.matrixWorld).invert();
+  uniforms.uTearM.value[i].copy(m);
+  uniforms.uTearP.value[i].set(radius(e), seed(e));
+  const o = e.glitch || {};
+  uniforms.uTearC.value[i].set(o.cx || 0, o.cy || 0);
+  base[i] = { r: radius(e), sd: seed(e), cx: o.cx || 0, cy: o.cy || 0,
+              /* the direction the whole break is drawn in, and the four
+                 positions the cut walks between along it */
+              th: Math.floor(rnd(7.3 + seed(e) * 1.7) * DIRS) * (Math.PI / DIRS),
+              gs: o.gsplit === undefined ? 1.5 : o.gsplit };
+  fringes[i] = e._fringe;
+  ghosts[i] = e._ghost;
+  uniforms.uTearCount.value = i + 1;
+}
+
+function radius(e) {
+  const o = e.glitch || {};
+  /* the base is what the star used; the field on top of it is what changed, so
+     the break reads as a burst of joined bars rather than a scaled-up spike */
+  return o.radius === undefined ? (e.w + e.h) * 0.235 : o.radius;
+}
+function seed(e) { return ((e.seed || 1) % 997) * 0.137; }
+
+/* ------------------------------------------------- patching scene materials */
+
+const patched = new WeakSet();
+
+/** Give an existing material the cut. The tear field is global, so one patch
+    serves every break: the wall, the moulding and the canvas all go. */
+function patch(mat) {
+  if (!mat || patched.has(mat)) return mat;
+  patched.add(mat);
+  /* without this three would hand the program to unpatched twins */
+  mat.customProgramCacheKey = () => 'tear';
+  mat.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = 'varying vec3 vTearW;\n' + shader.vertexShader.replace(
+      '#include <project_vertex>',
+      'vTearW = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;\n#include <project_vertex>');
+    shader.fragmentShader = 'varying vec3 vTearW;\n' + CHUNK + CUT +
+      shader.fragmentShader.replace('#include <clipping_planes_fragment>',
+        '#include <clipping_planes_fragment>\n\ttearCut( vTearW );');
+  };
+  mat.needsUpdate = true;
+  return mat;
+}
+
+/* ------------------------------------------------------- the bitmap ghost */
+
+const DOT = '#e6e2d8';
+const GROUND = '#050506';
+
+/* The duplicate can be inked as characters instead of as dots. Two glyphs, 5
+   dots wide and 7 tall, laid out the way a teletype cell lays them out — 8x8
+   with the marks inside the margins — and a zero carrying the slash that keeps
+   it from being the letter O. Nothing here is a font file: a bitmap font *is*
+   this table, and the room does not fetch one.
+   This is the alternate plate, not the hung one: the Atkinson dot screen ships,
+   because a character leaves most of its cell empty and the picture's figure
+   goes out of the window with it. ?bits=dim | blank | dense hangs the digits
+   from the room; ?bits=off, the default, is the dots. */
+const GLYPH = {
+  one: ['..#..', '.##..', '..#..', '..#..', '..#..', '..#..', '.###.'],
+  zero: ['.###.', '#...#', '#..##', '#.#.#', '##..#', '#...#', '.###.']
+};
+const BITS = (((window.location.search.match(/[?&]bits=(\w+)/) || [])[1]) || '')
+  .replace(/^(off|none|atkinson)$/, '');
+/* how loud the unlit cells are: the picture is still data, so its darks are
+   zeros rather than nothing, but they must not compete with the ones */
+const PAPER = { dim: 0.16, dense: 0.42, blank: 0 }[BITS] || 0;
+/* Two dev hooks for the ways an inverted digit plate fails. `ink` is the
+   glyph's dot width in pixels — at 2 the characters sit apart cleanly but the
+   plate goes thin enough that the room loses it, so 3 is shipped; it is not the
+   lever, though. `neg` is, and it is on: the ground stays black and the
+   negative is carried by which cells light rather than by which colour they
+   light with. An off-white ground holding the picture as dark holes loses its
+   figure to minification far faster than a black ground holding it as bright
+   ink — a glyph inks only some 15 % of its cell — so the Joconde's head
+   dissolved into one red slab. `?neg=0` restores the paper ground, and
+   `?bits=off` never had the problem: a dot fills its cell. */
+const INK = +(window.location.search.match(/[?&]ink=(\d+)/) || [])[1] || 3;
+const NEG = !/[?&]neg=0/.test(window.location.search);
+
+/** Stamp one glyph into a 20 px cell with its top-left at (x, y): five dots
+    across and seven down, every edge landing on a whole pixel. */
+function glyph(ctx, g, x, y) {
+  for (let r = 0; r < g.length; r++) {
+    const row = g[r];
+    for (let c = 0; c < 5; c++) {
+      if (row[c] === '#') ctx.fillRect(x + c * INK, y + r * 2, INK, 2);
+    }
+  }
+}
+
+/** The duplicate, as an Atkinson dither — the 1-bit bitmap the early Mac drew
+    its screen with. Light dots on a black ground, but no screen and no grey:
+    every cell is either ink or paper, and the tone is carried entirely by how
+    thickly the lit cells are scattered.
+    `invert` reverses the two at the bitmap level: the paper becomes the ground
+    and the marks go dark, so the duplicate hangs as a negative of itself.
+    Before quantising, the luminance is stretched to the picture's own black and
+    white points and given one gentle unsharp pass, which is what separates a
+    figure from its background once the detail is gone.
+    `sd` is the work's seed: it throws the corruption described below, so a
+    painting keeps its damage between visits to the room. */
+function bitmapTexture(src, cellsIn, invert, sd, mode) {
+  const bits = mode === undefined ? BITS : mode;
+  /* A character plate has to hold a glyph in each cell, so the grid coarsens
+     when the duplicate is inked in digits: the picture is then built out of
+     characters, which is the point, and 170 cells of five-dot glyphs would be
+     noise at any distance the room is walked at. */
+  const cells = bits ? Math.max(24, Math.round(cellsIn * 0.42)) : cellsIn;
+  const cols = Math.max(16, Math.round(cells));
+  const rows = Math.max(12, Math.round(cols * src.height / src.width));
+  const small = document.createElement('canvas');
+  small.width = cols; small.height = rows;
+  const sctx = small.getContext('2d', { willReadFrequently: true });
+  sctx.drawImage(src, 0, 0, cols, rows);
+  const d = sctx.getImageData(0, 0, cols, rows).data;
+
+  const n = cols * rows;
+  const raw = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const k = i * 4;
+    raw[i] = (d[k] * 0.299 + d[k + 1] * 0.587 + d[k + 2] * 0.114) / 255;
+  }
+
+  /* the picture's real black and white points, ignoring its extreme outliers */
+  const sorted = Float32Array.from(raw).sort();
+  const at = q => sorted[Math.min(n - 1, Math.floor(q * n))];
+  const lo = at(0.03);
+  const hi = Math.max(at(0.97), lo + 0.14);
+  const tone = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    let v = (raw[i] - lo) / (hi - lo);
+    v = v < 0 ? 0 : v > 1 ? 1 : v;
+    /* held down below the line: a printed screen keeps its black between the
+       dots, and the passages that go solid are the ones that were white */
+    tone[i] = Math.pow(v, 1.35);
+  }
+
+  /* one unsharp pass on the stretched tone, before any of it is quantised */
+  const sharp = new Float32Array(n);
+  const amt = 0.5;
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      const l = tone[i - (x > 0)], r = tone[i + (x < cols - 1)];
+      const u = tone[i - cols * (y > 0)], b = tone[i + cols * (y < rows - 1)];
+      const blur = (l + r + u + b) * 0.25;
+      let v = tone[i] + (tone[i] - blur) * amt;
+      sharp[i] = v < 0 ? 0 : v > 1 ? 1 : v;
+    }
+  }
+
+  /* Atkinson spreads six of the eight units of error forward and down and keeps
+     the other two, so a cell only lights when its neighbourhood is genuinely
+     bright: the darks stay solid black instead of turning into a fine screen,
+     and the light runs out into a coarse, deliberate grain. */
+  const a = Float32Array.from(sharp);
+  const FWD = [[1, 0], [2, 0], [-1, 1], [0, 1], [1, 1], [0, 2]];
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      const v = a[i] > 0.5 ? 1 : 0;
+      const err = a[i] - v;
+      a[i] = v;
+      for (const [dx, dy] of FWD) {
+        const nx = x + dx, ny = y + dy;
+        if (nx >= 0 && nx < cols && ny < rows) a[ny * cols + nx] += err * 0.125;
+      }
+    }
+  }
+
+  /* The ghost is damaged the way a file is damaged, not the way paint is:
+     whole scanline bands pulled sideways off the grid they belong to, a run of
+     cells that dropped out, a run that fused solid, and stray flipped pixels.
+     It is baked into the texture here so the corruption is a property of the
+     duplicate and never an animation — a glitch's shape does not travel.
+     Everything is thrown from the picture's own seed, so each work keeps the
+     same damage every time the room is built. */
+  const R = x => { const v = Math.sin(x * 91.77) * 41237.19; return v - Math.floor(v); };
+  const sd0 = sd || 1;
+  const bands = 3 + Math.floor(R(sd0) * 3);
+  for (let b = 0; b < bands; b++) {
+    const y0 = Math.floor(R(sd0 * 3.7 + b * 13.1) * (rows - 2));
+    const bh = 1 + Math.floor(R(sd0 * 5.3 + b * 7.9) * 3);
+    /* a whole number of cells, so a sheared band still lands on the grid */
+    const dx = Math.round((R(sd0 * 7.1 + b * 2.3) - 0.5) *
+                          2 * (3 + 22 * R(sd0 * 1.9 + b * 17.7)));
+    for (let y = y0; y < Math.min(rows, y0 + bh); y++) {
+      const row = a.slice(y * cols, y * cols + cols);
+      for (let x = 0; x < cols; x++) {
+        a[y * cols + x] = row[(((x - dx) % cols) + cols) % cols];
+      }
+    }
+  }
+  for (let k = 0; k < 2; k++) {
+    const y = Math.floor(R(sd0 * 13.7 + k * 29.3) * rows);
+    const x = Math.floor(R(sd0 * 17.3 + k * 31.1) * cols);
+    const len = 4 + Math.floor(R(sd0 * 23.9 + k * 7.7) * 26);
+    for (let j = 0; j < len; j++) a[y * cols + ((x + j) % cols)] = k ? 1 : 0;
+  }
+  const strays = Math.floor(n * 0.004);
+  for (let j = 0; j < strays; j++) {
+    const p = Math.floor(R(sd0 * 41.3 + j * 3.1) * n);
+    a[p] = a[p] > 0.5 ? 0 : 1;
+  }
+
+  const S = bits ? 20 : 4;
+  /* `neg` moves the negative from the colour to the cell: the ground stays
+     black and the picture's darks are what lights up, so the plate keeps the
+     one thing the dot screen had — ink carrying the figure, not gaps. */
+  const flip = bits && invert && NEG;
+  const paper = invert && !flip;
+  const out = document.createElement('canvas');
+  out.width = cols * S; out.height = rows * S;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = paper ? DOT : GROUND;
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.fillStyle = paper ? GROUND : DOT;
+  if (!bits) {
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] < 0.5) continue;
+      ctx.fillRect((i % cols) * S, Math.floor(i / cols) * S, S, S);
+    }
+  } else {
+    /* The lit cells are the ones; the rest of the field is zeros, kept down far
+       enough that the figure is still made of ones and not of a second noise
+       floor. `blank` drops them and leaves the picture to the ones alone. */
+    const ox = Math.floor((S - 5 * INK) / 2);
+    for (let i = 0; i < a.length; i++) {
+      const x = (i % cols) * S + ox, y = Math.floor(i / cols) * S + 3;
+      const on = flip ? a[i] < 0.5 : a[i] > 0.5;
+      if (on) glyph(ctx, GLYPH.one, x, y);
+      else if (PAPER) {
+        ctx.globalAlpha = PAPER;
+        glyph(ctx, GLYPH.zero, x, y);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+  const t = new THREE.CanvasTexture(out);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+const FLAT_VERT = 'varying vec2 vUv; void main(){ vUv = uv;' +
+  ' gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }';
+
+/* The ghost is the only lit thing inside the break that is not the edge, so it
+   is where the neon lives. Its white is driven past the bloom threshold and out
+   the other side of a halo: the three channels of the screen are read from three
+   slightly different places, which is how a corrupted display behaves — one
+   picture, and its colours disagreeing about where it is. The four wider taps
+   are the bleed that a neon tube throws past its own outline.
+   A flinch moves this screen, it does not brighten it and it does not blank
+   it. uRoll is a height in cells: whole bands of scanlines are dragged up or
+   down off the grid they belong to. The dropouts that used to ride here --
+   the blink, and the one band in eight that lost its picture -- are gone,
+   because a frame of nothing reads as a crashed app, not as a corrupted
+   display. Never add to it either — the flash that used to ride here washed
+   the room out. */
+const GHOST_FRAG = `
+#define NEON ${NEON}
+uniform sampler2D uMap;
+uniform vec2 uTexel;     /* one cell of the screen, in uv */
+uniform float uSplit;    /* how far a cell drags its trail, in cells */
+uniform float uNeon;     /* HDR scale: crosses the bloom threshold above ~0.9 */
+uniform float uRoll;     /* signed: how far the bands are dragged at the jerk,
+                            and which way the spasm goes; 0 is at rest */
+uniform float uRollSeed; /* fixes which bands of the screen move */
+uniform float uRollBands;/* how many horizontal bands the roll cuts the screen into */
+uniform vec3 uTint;      /* the plate's own colour, from the picture it copies */
+uniform vec3 uBleed;     /* the same hue, dimmer: what the corona throws past the cell */
+varying vec2 vUv;
+
+float rollHash(float n) { return fract(sin(n * 12.9898) * 43758.5453); }
+
+/* One cell of the screen, as brightness only. The map is the picture itself, so
+   taking its brightest channel keeps a pale sky and a lit face at the same level
+   of light; Rec.709 weights would leave a blue sky dimmer than a yellow one. */
+float cell(vec2 p) { vec3 t = texture2D(uMap, p).rgb; return max(max(t.r, t.g), t.b); }
+
+void main() {
+  vec2 uv = vUv;
+  if (uRoll != 0.0) {
+    float band = floor(vUv.y * uRollBands);
+    float h = rollHash(band * 7.3 + uRollSeed * 12.7);
+    /* uRoll is signed and the sign is the spasm's own direction: most bands
+       move with it and one in four goes against. A body that flinches goes
+       one way; a coin toss per band is static, not a reflex. Nothing drops
+       out -- the screen moves, it is never absent. */
+    if (h > 0.52) {
+      float dir = (h > 0.88 ? -1.0 : 1.0) * sign(uRoll);
+      float cells = abs(uRoll) * (1.0 + floor(rollHash(band * 3.1 + uRollSeed) * 2.0));
+      uv.y += dir * cells * uTexel.y;
+    }
+  }
+
+  /* The plate is monochrome. The picture says how lit a cell is and the work's
+     own hue says what colour it is, in full -- reading the three channels from
+     three places used to hand R, G and B three different dots of the screen,
+     which under a saturated tint is a second and third colour on the plate. That
+     is the confetti the blue Dalí showed: violet dots, cyan hairlines, and no
+     blue in it at all. The split survives as a trail rather than a separation: a
+     lit cell drags a dimmer copy of its own brightness along the tear direction,
+     so a cell edge still disagrees with itself, but about how bright it is and
+     not about what hue it is.
+     A floor of the hue under the dark cells was tried here, to make the wound
+     read as one field rather than as dots floating in a hole, and it spent the
+     one thing that makes a break a break: the black. Colour the black and it is a
+     poster. Widening the stroke to a hairline groove got the same field back
+     without touching it. */
+  float core = cell(uv);
+  vec2 o = uTexel * uSplit;
+#if NEON
+  float L = max(core, 0.55 * cell(uv + vec2(o.x, 0.0)));
+  vec3 col = L * uTint;
+  vec2 hh = uTexel * (1.7 + uSplit * 0.5);
+  /* The corona has to stay thinner than the black gap between lit cells -- wider
+     is the blown-out sheet that has been rejected four times. */
+  float bleed = (cell(uv + vec2(hh.x, 0.0)) + cell(uv - vec2(hh.x, 0.0))
+               + cell(uv + vec2(0.0, hh.y)) + cell(uv - vec2(0.0, hh.y))) * 0.25 - core;
+  col += max(0.0, bleed) * uBleed;
+#else
+  vec3 col = core * uTint;
+#endif
+
+#if NEON
+  gl_FragColor = vec4(col * uNeon, 1.0);
+#else
+  /* uNeon is what drove the white past the bloom threshold, which is the glow
+     as much as the bleed is, so it comes off with the rest of it. */
+  gl_FragColor = vec4(col, 1.0);
+#endif
+}`;
+
+/** The duplicate, hung flat behind the canvas at the picture's own scale.
+    It carries no gallery light and never did: colour is black, the screen is
+    the only source, so the dots survive the spot and the environment instead of
+    washing into a pale positive of the painting. Being unlit, it is drawn as a
+    plain emissive field, which is also what lets the neon be set in HDR. */
+function bitmapMesh(src, e) {
+  const o = e.glitch || {};
+  const pal = palette(o.hue);
+  const tex = bitmapTexture(src, o.pix || 170, !!o.invert, e.seed);
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: FLAT_VERT,
+    fragmentShader: GHOST_FRAG,
+    uniforms: {
+      uMap: { value: tex },
+      uTexel: { value: new THREE.Vector2(1 / tex.image.width, 1 / tex.image.height) },
+      uTint: { value: v3(pal.tint) },
+      uBleed: { value: v3(pal.bleed) },
+      uSplit: { value: o.gsplit === undefined ? 1.5 : o.gsplit },
+      /* a negative hangs as a whole plate of light, so it needs less push to
+         read as neon than a field of dots on black; the dots have to stay just
+         over the bloom threshold or the gaps between them stop existing */
+      uNeon: { value: o.neon === undefined ? (o.invert ? 0.92 : 1.2) : o.neon },
+      uRoll: { value: 0 },
+      uRollSeed: { value: 0 },
+      /* a band is a handful of cells tall, so a rolled band is a visible tear in
+         the scanlines rather than a one-row shimmer nobody can resolve */
+      uRollBands: { value: Math.max(3, Math.round(tex.image.height / 26)) }
+    }
+  });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(e.w, e.h), mat);
+  /* clear of the canvas's scalloped edges, which bow back by 12 mm */
+  m.position.z = 0.014;
+  e._ghost = mat;
+  return m;
+}
+
+/* ------------------------------------------------------------- the void */
+
+function voidMesh(e, z) {
+  const g = e.glitch || {};
+  /* the floor of the void has to run at least as far as the break does, or a
+     long shard cuts the wall and finds the room's other side behind it */
+  const reach = radius(e) * COVER + Math.max(Math.abs(g.cx || 0), Math.abs(g.cy || 0));
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(Math.max(e.w + 3.2, 2 * reach), Math.max(e.h + 3.2, 2 * reach)),
+    new THREE.MeshBasicMaterial({ color: 0x000000 }));
+  m.position.z = z;
+  return m;
+}
+
+/* ------------------------------------------------------- the split light */
+
+const FRINGE_FRAG = CHUNK + `
+uniform vec2 uSize;      /* the quad, in metres */
+uniform float uR;
+uniform float uSeed;
+uniform vec2 uC;         /* the break's own centre, in picture coords */
+uniform float uGain;     /* the cut's pop: 1 at rest, briefly lifted on a beat */
+uniform float uJit;      /* the flinch's own wobble, about +-0.4 */
+uniform vec3 uRimA;      /* the band on the edge: the work's own colour */
+uniform vec3 uRimB;      /* and just behind it, the same hue at its own level */
+varying vec2 vUv;
+
+/* The light is one band, measured on the combs themselves, so every hairline
+   carries a chromatic fringe and nothing else does.
+   There is deliberately no band on the boxes' envelope any more. That drew a
+   clean neon rule around each rectangle, and a rule that straight around a mass
+   of broken strokes reads as an outline the tear does not have -- it also lit up
+   where a box's envelope enclosed nothing, which is a floating tube on the wall.
+   The width is a fraction of the comb's pitch rather than a number of metres,
+   because a band fixed in metres is either invisible on a small break or wider
+   than the groove on a big one -- and the band is gated to the inside of its own
+   stroke. A band that straddles the edge cannot work here: the groove is three
+   and a half millimetres, so any fringe wide enough to read at the room's
+   distance reaches its neighbour and the whole comb floods into one sheet. Both
+   lobes therefore sit on the inner side of the edge, the work's own colour at the
+   boundary and the same colour a hair behind it, which leaves the groove black and
+   the middle of every stroke showing the bitmap -- rim neon, core picture, both
+   true at once.
+   The band has to stay well inside the stroke. At the room's distance a stroke
+   is six pixels across, so a fringe that covers more than a third of one turns
+   eighty packed hairlines into a single lamp: the two peaks add to a brighter
+   blend than either, the dark core disappears, and bloom smears the result into
+   a white sheet that hides the very break it is meant to trace. */
+vec3 tearRim(float d, float w, float jit) {
+  if (d > 0.0) return vec3(0.0);
+  w *= 1.0 + jit;
+  float hw = w * 0.42;
+  float gR = exp(-pow((d + w * 0.16) / hw, 2.0));
+  float gB = exp(-pow((d + w * 1.05) / hw, 2.0));
+  return uRimA * gR + uRimB * gB;
+}
+
+void main() {
+  vec2 p = (vUv - 0.5) * uSize - uC;
+  if (length(p) > uR * ${COVER}) discard;
+  float d = tearField(p, uR, uSeed);
+  gl_FragColor = vec4(tearRim(d, uR * CELL * PITCH * 0.09, uJit) * 0.6 * uGain, 1.0);
+}`;
+
+function fringeMesh(e, z) {
+  const g = e.glitch || {};
+  const pal = palette(g.hue);
+  const c = new THREE.Vector2(g.cx || 0, g.cy || 0);
+  /* the quad has to cover the whole break, so it is sized off the tear's own
+     reach rather than off the canvas — an off-centre or oversized tear would
+     otherwise have its longest shards clipped at the edge of the light */
+  const reach = radius(e) * COVER;
+  const W = Math.max(e.w, 2 * (Math.abs(c.x) + reach)) + 0.3;
+  const H = Math.max(e.h, 2 * (Math.abs(c.y) + reach)) + 0.3;
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: FRINGE_FRAG,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    uniforms: {
+      uSize: { value: new THREE.Vector2(W, H) },
+      uTearM: uniforms.uTearM,
+      uTearP: uniforms.uTearP,
+      uTearC: uniforms.uTearC,
+      uTearCount: uniforms.uTearCount,
+      uCut: uniforms.uCut,
+      uR: { value: radius(e) },
+      /* the structure seed, fixed for the hang: the light traces the same wound
+         the cut opens, and only uCut moves it */
+      uSeed: { value: seed(e) },
+      uC: { value: c },
+      /* the fringe is one band on the strokes themselves, and its width is
+         derived from the pitch so it scales with the break: see FRINGE_FRAG */
+      uGain: { value: 1 },
+      uJit: { value: 0 },
+      uRimA: { value: v3(pal.rimA) },
+      uRimB: { value: v3(pal.rimB) }
+    }
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(W, H), mat);
+  mesh.position.z = z;
+  mesh.renderOrder = 3;
+  return mesh;
+}
+
+/** Everything the break needs, hung on one picture's group. */
+function build(group, e, srcCanvas, opts) {
+  group.add(voidMesh(e, (opts && opts.voidZ) || -0.5));
+  if (srcCanvas) group.add(bitmapMesh(srcCanvas, e));
+  e._fringe = null;
+  if (NEON) {
+    /* one hair in front of the duplicate, so the light sits on the lips of the
+       break instead of being buried behind the plate it is tracing */
+    const f = fringeMesh(e, 0.02);
+    group.add(f);
+    /* the light has to know which break it is tracing, or a re-rolled silhouette
+       would leave it drawing the edge of a shape that no longer exists */
+    e._fringe = f.material;
+  }
+}
+
+const rnd = n => { const x = Math.sin(n * 12.9898) * 43758.5453; return x - Math.floor(x); };
+
+/* Seconds between re-cuts. The break changes on this beat and on nothing else:
+   no idle stretch, no frenzy, one steady corruption rate.
+   The rate is set by the wall label, not by the effect. The note beside each
+   picture is around forty words, which is a quarter of a minute of reading,
+   and movement at the edge of a page is what drags the eye off it — so the
+   break gets to speak four or five times across a read and no more. For
+   reference the web convention is `animation: glitch .3s infinite steps(2)`,
+   3.3 changes a second, which is also WCAG 2.3.1's ceiling of three flashes in
+   any one-second period; that suits a headline for two seconds, not a room you
+   stand in. */
+const STEP = 4;
+/* however slow the beat, the light's answer to a cut stays a snap */
+const POP = 0.12;
+/* A flinch is a spasm, not a movement: about six frames long, and inside those
+   six frames the level changes only at whole-frame boundaries. */
+const FLINCH = 0.10;
+const FLINCH_FRAME = 0.034;
+
+/** Where the flinch is, and how hard. Thrown from the beat's own number, so a
+    break twitches none, once or twice in a four-second window and always at a
+    point that was fixed when the beat started.
+    A spasm is one reflex, not three dice. It is decided at its own first
+    frame -- which bands are involved, how far the jerk drags them, which way
+    the body goes -- and then it decays: the jerk is the first frame and the
+    hardest, the second settles most of the way back, and the third is a short
+    counter-move before the screen is still. Re-throwing the magnitude and the
+    band set every frame made it flicker; a flinch is a muscle, and a muscle
+    does the same thing all the way through one spasm.
+    Returns a position spasm, never a brightness one: `roll` is signed -- the
+    cells the screen's bands are dragged, and the direction of the jerk --
+    and `j` widens the chromatic split. Nothing ever goes out during a spasm:
+    a dropped frame reads as a crashed app, not as a flinch. All of it is
+    snapped to whole frames -- the point is that it ticks. */
+function flinch(t, i, frozen) {
+  if (frozen) return { roll: 0, j: 0, sd: 0 };
+  const step = Math.floor(t / STEP), into = t - step * STEP;
+  const throwRoll = rnd(step * 3.1 + i * 7.7);
+  const n = throwRoll < 0.34 ? 0 : throwRoll < 0.78 ? 1 : 2;
+  for (let k = 0; k < n; k++) {
+    const at = STEP * (0.36 + 0.27 * k) +
+               (rnd(step * 11.3 + k * 5.9 + i * 1.7) - 0.5) * 0.5;
+    if (into < at || into >= at + FLINCH) continue;
+    /* three frames, and the whole spasm hangs off this one throw */
+    const frame = Math.min(2, Math.floor((into - at) / FLINCH_FRAME));
+    const sd = 1 + Math.floor(rnd(step * 17.1 + k * 3.7 + i * 2.9) * 89);
+    const q = rnd(sd * 3.7 + k * 11.9);
+    const peak = (3 + Math.floor(q * 4)) * (q < 0.5 ? -1 : 1);
+    /* attack hardest and first, then the recoil against it: the envelope is
+       the reflex, and its sign flip is the counter-move */
+    const env = [1.0, 0.55, -0.3][frame];
+    return {
+      roll: Math.round(peak * env),
+      j: [2, 5, 7][Math.floor(q * 3)] * [1.0, 0.5, 0.25][frame],
+      sd
+    };
+  }
+  return { roll: 0, j: 0, sd: 0 };
+}
+
+/** One frame of the corruption. `frozen` holds the room at its rest shape, for
+    reduced-motion users and for stills. */
+function tick(t, frozen) {
+  const step = frozen ? 0 : Math.floor(t / STEP);
+  const into = frozen ? POP : (t % STEP);
+  const pop = Math.max(0, 1 - into / POP);
+  const r = rnd(step * 91.7);
+  /* a cut marks itself with a short, mild lift, not a flash: the light is
+     already the brightest thing in the room at rest, and the old 2.3x peak on
+     top of it is what the user meant by blinding */
+  const gain = 1 + pop * (0.06 + 0.20 * r);
+  const jit = pop * 0.8 * (r - 0.5);
+  /* The seven edge states a break walks between, in a fixed order, so a tear
+     frays through the same sequence and returns rather than being thrown anew
+     each beat. This is the whole of what a cut changes now. */
+  uniforms.uCut.value = frozen ? 0 : step % 7;
+  for (let i = 0; i < base.length; i++) {
+    const b = base[i], P = uniforms.uTearP.value[i], C = uniforms.uTearC.value[i];
+    if (frozen) {
+      P.set(b.r, b.sd); C.set(b.cx, b.cy);
+    } else {
+      /* the radius only ever shrinks, so the void plate and the light quad
+         behind it can never be found short */
+      P.set(b.r * (0.90 + 0.10 * rnd(step * 5.3 + i * 17.9)), b.sd);
+      /* and the break works along its own axis. Four positions out and four
+         back over eight beats, always on the bearing the tear was torn in --
+         which is what a rip does under tension, and the opposite of the old
+         ±7 cm throw in a random direction that made every cut look like a new
+         tear arriving at a new angle. The amplitude is arithmetic, not taste:
+         a stroke reaches 3.65 R from the field's centre and COVER is 3.85, so
+         the walk plus its cross-play has to stay inside that tenth. */
+      const cyc = step % 8;
+      const k = ((cyc < 4 ? cyc : 7 - cyc) - 1.5) / 1.5;
+      const run = b.r * 0.10 * k;
+      const play = (rnd(step * 9.1 + i * 5.1) - 0.5) * 0.02;
+      const ca = Math.cos(b.th), sa = Math.sin(b.th);
+      C.set(b.cx + ca * run - sa * play, b.cy + sa * run + ca * play);
+    }
+    /* the flinch rides on top of the cut: the silhouette is still only allowed
+       to change on the beat, so a spasm moves the light and the ghost, never
+       the edge of the absence itself */
+    const f = flinch(t, i, frozen);
+    const u = fringes[i] && fringes[i].uniforms;
+    if (u) {
+      u.uGain.value = gain;
+      u.uJit.value = jit + f.j * 0.05;
+      u.uC.value.copy(C);
+    }
+    const gh = ghosts[i] && ghosts[i].uniforms;
+    if (gh) {
+      gh.uSplit.value = (b.gs === undefined ? 1.5 : b.gs) + f.j;
+      gh.uRoll.value = f.roll;
+      gh.uRollSeed.value = f.sd;
+    }
+  }
+}
+
+/* palette is exposed for tools/fringe.js, which previews the tinted plate and
+   must not keep its own copy of the colour maths */
+window.Glitch = { register, patch, build, bitmapTexture, palette, tick, uniforms };
+
+})();

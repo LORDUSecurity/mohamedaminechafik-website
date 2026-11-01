@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kids' Garden">
+  <!-- seedling: stem, two leaves, ground line -->
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.8" flood-color="#ff8fd0" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <g fill="none" stroke="#ff8fd0" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <path d="M32 50 V27"/>
+    <path d="M32 37 C23 37 18.5 32 18 24 C26.5 24.5 32 29.5 32 37 Z"/>
+    <path d="M32 32 C41 31 45.5 25.5 46 17.5 C37.5 18.5 32 24 32 32 Z"/>
+    <path d="M22 50 H42"/>
+  </g>
+</svg>
