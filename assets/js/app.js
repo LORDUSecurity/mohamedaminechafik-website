@@ -776,7 +776,7 @@ function renderFooter() {
       <a href="#/shelf">Skills</a>
       <a href="#/about">About</a>
       <a href="#/contact">Contact</a>
-      <a href="../index.html">3D museum</a>
+      <a href="museum/index.html">3D museum</a>
     </nav>
     <div class="foot-col">
       <h4 class="foot-h">Direct</h4>
@@ -792,7 +792,7 @@ function renderFooter() {
     </div>
   </div>
   <div class="foot-actions">
-    <a class="btn cut cut-4" href="../index.html"><span class="face">Enter the museum <span class="arr">↗</span></span></a>
+    <a class="btn cut cut-4" href="museum/index.html"><span class="face">Enter the museum <span class="arr">↗</span></span></a>
   </div>
   <p class="foot-fine">© 2026 ${esc(C.name)} · ${esc(C.location)} · ${esc(C.email)}</p>`;
 }
