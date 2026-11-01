@@ -166,7 +166,7 @@ function panelBackCanvas(wPx, hPx, seed) {
   const ctx = c.getContext('2d');
   const rnd = Art.mulberry32(seed);
   const g = ctx.createLinearGradient(0, 0, 0, hPx);
-  g.addColorStop(0, '#d8d2c6'); g.addColorStop(0.35, '#cdc6b8'); g.addColorStop(1, '#a9a294');
+  g.addColorStop(0, '#e2dccf'); g.addColorStop(0.35, '#d8d1c3'); g.addColorStop(1, '#bdb6a8');
   ctx.fillStyle = g; ctx.fillRect(0, 0, wPx, hPx);
   /* light pool from the fixture above */
   ctx.globalCompositeOperation = 'lighter';
@@ -177,25 +177,29 @@ function panelBackCanvas(wPx, hPx, seed) {
   pg.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = pg; ctx.fillRect(0, 0, wPx, hPx);
   ctx.globalCompositeOperation = 'source-over';
-  /* shadow cast by the frame */
+  /* Shadow cast by the frame. The recess still has to sit in the wall, so the
+     drop stays — but at half the depth it used to be. Read at walking distance
+     the old bands were the single largest contributor to "the walls are dirty":
+     a multiply at 0.46 grey, tiled once per panel, twenty-four times in the room.
+     Baked shadow is only allowed to say *which way the light comes from*. */
   ctx.globalCompositeOperation = 'multiply';
   const fw = wPx * 0.62, fh = hPx * 0.78;
   const fx = (wPx - fw) / 2, fy = (hPx - fh) / 2;
   const sg = ctx.createLinearGradient(0, fy, 0, fy + hPx * 0.2);
-  sg.addColorStop(0, 'rgba(255,255,255,1)'); sg.addColorStop(1, 'rgba(190,182,170,1)');
+  sg.addColorStop(0, 'rgba(255,255,255,1)'); sg.addColorStop(1, 'rgba(214,208,197,1)');
   ctx.fillStyle = sg;
   ctx.fillRect(0, fy, wPx, hPx * 0.2);
   /* soft drop under and to the right of the frame */
   const dg = ctx.createLinearGradient(fx + fw, 0, fx + fw + wPx * 0.12, 0);
-  dg.addColorStop(0, 'rgba(120,112,100,1)'); dg.addColorStop(1, 'rgba(255,255,255,1)');
+  dg.addColorStop(0, 'rgba(172,165,153,1)'); dg.addColorStop(1, 'rgba(255,255,255,1)');
   ctx.fillStyle = dg; ctx.fillRect(fx + fw, fy - hPx * 0.05, wPx * 0.12, fh + hPx * 0.15);
   const bg = ctx.createLinearGradient(0, fy + fh, 0, fy + fh + hPx * 0.14);
-  bg.addColorStop(0, 'rgba(118,110,98,1)'); bg.addColorStop(1, 'rgba(255,255,255,1)');
+  bg.addColorStop(0, 'rgba(168,161,150,1)'); bg.addColorStop(1, 'rgba(255,255,255,1)');
   ctx.fillStyle = bg; ctx.fillRect(fx - wPx * 0.06, fy + fh, fw + wPx * 0.12, hPx * 0.14);
   ctx.globalCompositeOperation = 'source-over';
   /* plaster tooth */
-  ctx.globalAlpha = 0.10;
-  ctx.drawImage(noiseCanvas(256, 256, 0.5, 0.8, rnd, 0), 0, 0, wPx, hPx);
+  ctx.globalAlpha = 0.05;
+  ctx.drawImage(noiseCanvas(256, 256, 0.5, 0.55, rnd, 0), 0, 0, wPx, hPx);
   ctx.globalAlpha = 1;
   return c;
 }
@@ -208,15 +212,19 @@ function wallCanvas(seed, wPx, hPx, tone) {
   const g = ctx.createLinearGradient(0, 0, 0, hPx);
   g.addColorStop(0, tone[0]); g.addColorStop(0.55, tone[1]); g.addColorStop(1, tone[2]);
   ctx.fillStyle = g; ctx.fillRect(0, 0, wPx, hPx);
-  for (let i = 0; i < 22; i++) {
-    const x = rnd() * wPx, y = rnd() * hPx, r = wPx * (0.03 + rnd() * 0.12);
+  /* Plaster, not staining. The pass used to throw 22 blooms, half of them dark,
+     tiled six times across the wall — which read as damp at the far end of the
+     room. A clean wall gets a few soft lights, no darks, and a much fainter
+     tooth; the gradient below is what carries the floor-to-cornice falloff. */
+  for (let i = 0; i < 7; i++) {
+    const x = rnd() * wPx, y = rnd() * hPx, r = wPx * (0.06 + rnd() * 0.14);
     const bg = ctx.createRadialGradient(x, y, 0, x, y, r);
-    bg.addColorStop(0, rnd() > 0.5 ? 'rgba(255,250,238,.10)' : 'rgba(96,88,76,.07)');
+    bg.addColorStop(0, 'rgba(255,252,244,.055)');
     bg.addColorStop(1, 'rgba(128,128,128,0)');
     ctx.fillStyle = bg; ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
-  ctx.globalAlpha = 0.09;
-  ctx.drawImage(noiseCanvas(384, 384, 0.5, 0.9, rnd, 0), 0, 0, wPx, hPx);
+  ctx.globalAlpha = 0.045;
+  ctx.drawImage(noiseCanvas(384, 384, 0.5, 0.55, rnd, 0), 0, 0, wPx, hPx);
   ctx.globalAlpha = 1;
   return c;
 }
@@ -238,25 +246,25 @@ function buildMaterials(renderer, rnd) {
   });
 
   /* repeat 1 vertically so the plaster gradient runs floor -> cornice once */
-  const wallTone = ['#d3ccbe', '#c8c0b0', '#a49a88'];
+  const wallTone = ['#ded7cb', '#d5cec2', '#b9b2a6'];
   const wallMat = new THREE.MeshStandardMaterial({
     map: canvasTexture(wallCanvas(7, 1024, 512, wallTone), { repeat: [6, 1] }),
-    roughness: 0.92, metalness: 0, envMapIntensity: 0.5
+    roughness: 0.86, metalness: 0, envMapIntensity: 0.62
   });
   wallMat.map.wrapS = wallMat.map.wrapT = THREE.RepeatWrapping;
 
-  const trimTone = ['#d6cfc2', '#cdc5b6', '#b3aa99'];
+  const trimTone = ['#e0dacf', '#d8d1c4', '#c0b8a7'];
   const trimMat = new THREE.MeshStandardMaterial({
     map: canvasTexture(wallCanvas(11, 512, 512, trimTone)),
-    roughness: 0.85, metalness: 0, envMapIntensity: 0.55
+    roughness: 0.8, metalness: 0, envMapIntensity: 0.66
   });
 
   /* Downward-facing plaster catches no direct light; this stands in for the
      bounce the lantern feeds into the upper volume. */
   const ceilingMat = new THREE.MeshStandardMaterial({
-    map: canvasTexture(wallCanvas(23, 512, 512, ['#ded8cb', '#d3ccbe', '#bdb5a6'])),
-    roughness: 0.95, metalness: 0, envMapIntensity: 0.45,
-    emissive: 0x6a5c48, emissiveIntensity: 0.5
+    map: canvasTexture(wallCanvas(23, 512, 512, ['#e8e2d6', '#ded7cb', '#c8c1b2'])),
+    roughness: 0.9, metalness: 0, envMapIntensity: 0.55,
+    emissive: 0x7a6b53, emissiveIntensity: 0.55
   });
 
   /* three frame finishes, all with real relief */
