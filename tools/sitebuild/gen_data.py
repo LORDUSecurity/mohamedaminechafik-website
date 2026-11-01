@@ -753,12 +753,11 @@ CONTACT = dict(
 )
 
 # ------------------------------------------------------------- coursework --
-# Graded ESI modules: skills the degree proves that no linked work does. They
-# keep the shelf's package vocabulary and colours, but they travel with the
-# mark, so they belong beside Education rather than on the shelf.
-coursework = [dict(cat=pkg, name=name, module=module, mark=mark)
-              for pkg, name, module, mark in RAW.get("COURSEWORK", [])]
-coursework.sort(key=lambda c: (pkg_i[c["cat"]], -c["mark"]))
+# Skills the degree teaches that no linked work proves. They keep the shelf's
+# packages and tiles, but they carry no work count: the coursework is the
+# claim, so they belong beside Education rather than on the shelf.
+coursework = [dict(cat=pkg, name=name) for pkg, name in RAW.get("COURSEWORK", [])]
+coursework.sort(key=lambda c: (pkg_i[c["cat"]], c["name"]))
 
 data = dict(projects=projects, skills=skills, categories=pkgs,
             coursework=coursework, contact=CONTACT)

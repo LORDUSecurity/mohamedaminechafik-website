@@ -1873,141 +1873,235 @@ window.SITE = {
  "coursework": [
   {
    "cat": "fullstack",
-   "name": "UML & project management",
-   "module": "Management de projet SI + UML (S3)",
-   "mark": 15.6
+   "name": "Android development"
   },
   {
    "cat": "fullstack",
-   "name": "Java EE & REST back ends",
-   "module": "Java EE + Développement mobile (S4)",
-   "mark": 15.58
+   "name": "Java EE back ends"
   },
   {
    "cat": "fullstack",
-   "name": "Relational modelling & SQL",
-   "module": "Analyse et Conception des Bases de Données (S2)",
-   "mark": 15.15
+   "name": "Object-oriented design & design patterns"
+  },
+  {
+   "cat": "fullstack",
+   "name": "REST API design"
+  },
+  {
+   "cat": "fullstack",
+   "name": "Relational schema design"
+  },
+  {
+   "cat": "fullstack",
+   "name": "UML analysis & modelling"
   },
   {
    "cat": "ai",
-   "name": "Operations research & optimisation",
-   "module": "Recherche operationnelle (S1)",
-   "mark": 16.5
+   "name": "Graph theory"
   },
   {
    "cat": "ai",
-   "name": "Machine learning",
-   "module": "Machine Learning (S4)",
-   "mark": 15.78
+   "name": "Inferential statistics"
   },
   {
    "cat": "ai",
-   "name": "Probability & statistics",
-   "module": "Probabilités/statistiques (S2)",
-   "mark": 15.25
+   "name": "Machine learning"
+  },
+  {
+   "cat": "ai",
+   "name": "Operations research & optimisation"
+  },
+  {
+   "cat": "ai",
+   "name": "Probability & statistics"
   },
   {
    "cat": "cloud",
-   "name": "OS internals & computer architecture",
-   "module": "Architecture des ordinateurs + SE (S1)",
-   "mark": 16.34
+   "name": "Computer architecture"
   },
   {
    "cat": "cloud",
-   "name": "Containers & distributed systems",
-   "module": "Systèmes répartis et virtualisation (S4)",
-   "mark": 16.11
+   "name": "Containers & orchestration"
   },
   {
    "cat": "cloud",
-   "name": "Linux & Windows administration",
-   "module": "Administration des systèmes d'exploitation (S3)",
-   "mark": 16.1
+   "name": "Distributed systems"
+  },
+  {
+   "cat": "cloud",
+   "name": "Linux administration"
+  },
+  {
+   "cat": "cloud",
+   "name": "Operating-system internals"
+  },
+  {
+   "cat": "cloud",
+   "name": "Shell scripting"
+  },
+  {
+   "cat": "cloud",
+   "name": "Virtualisation"
+  },
+  {
+   "cat": "cloud",
+   "name": "Windows administration"
   },
   {
    "cat": "security",
-   "name": "Identity & access management",
-   "module": "Gestion des identités (S4)",
-   "mark": 17.5
+   "name": "Biometrics & multi-factor authentication"
   },
   {
    "cat": "security",
-   "name": "Cryptography",
-   "module": "Cryptographie (S4)",
-   "mark": 16.0
+   "name": "Blockchain & distributed ledgers"
   },
   {
    "cat": "security",
-   "name": "Blockchain & distributed ledgers",
-   "module": "Blockchain (S4)",
-   "mark": 15.38
+   "name": "Cloud security"
   },
   {
    "cat": "security",
-   "name": "Secure protocols & services",
-   "module": "Protocoles et services de sécurité (S4)",
-   "mark": 12.97
+   "name": "Compliance & regulatory frameworks"
   },
   {
    "cat": "security",
-   "name": "Key & certificate management",
-   "module": "Infrastructures de gestion des clés (S4)",
-   "mark": 12.8
+   "name": "Cryptography"
   },
   {
    "cat": "security",
-   "name": "Cyberdefence fundamentals",
-   "module": "Introduction à la cyberdéfense (S3)",
-   "mark": 12.25
+   "name": "Cyberdefence fundamentals & threat modelling"
   },
   {
    "cat": "security",
-   "name": "Web application security",
-   "module": "Sécurité des applications web (S4)",
-   "mark": 12.0
+   "name": "Distributed systems security"
+  },
+  {
+   "cat": "security",
+   "name": "Firewalls & VPN"
+  },
+  {
+   "cat": "security",
+   "name": "ISMS implementation"
+  },
+  {
+   "cat": "security",
+   "name": "Identity & access management"
+  },
+  {
+   "cat": "security",
+   "name": "IoT, embedded & OT security"
+  },
+  {
+   "cat": "security",
+   "name": "Key & certificate management (PKI)"
+  },
+  {
+   "cat": "security",
+   "name": "Network & mobile security"
+  },
+  {
+   "cat": "security",
+   "name": "Number theory for cryptography"
+  },
+  {
+   "cat": "security",
+   "name": "Penetration testing & ethical hacking"
+  },
+  {
+   "cat": "security",
+   "name": "Protection tools & hardening"
+  },
+  {
+   "cat": "security",
+   "name": "Secure protocols & services"
+  },
+  {
+   "cat": "security",
+   "name": "Security architecture"
+  },
+  {
+   "cat": "security",
+   "name": "Security governance & audit"
+  },
+  {
+   "cat": "security",
+   "name": "Security risk management"
+  },
+  {
+   "cat": "security",
+   "name": "Web application security"
   },
   {
    "cat": "network",
-   "name": "Network fundamentals (OSI / TCP-IP)",
-   "module": "Réseaux informatiques (S1)",
-   "mark": 16.76
+   "name": "DNS, DHCP & network services"
   },
   {
    "cat": "network",
-   "name": "Router & switch administration, QoS",
-   "module": "Admin réseaux et virtualisation (S3)",
-   "mark": 14.98
+   "name": "Network access control"
   },
   {
    "cat": "network",
-   "name": "DNS, DHCP, SNMP & monitoring",
-   "module": "Couches hautes et gestion de réseau (S3)",
-   "mark": 13.47
+   "name": "Network administration & QoS"
+  },
+  {
+   "cat": "network",
+   "name": "Network architecture (OSI / TCP-IP)"
+  },
+  {
+   "cat": "network",
+   "name": "Network supervision & monitoring"
+  },
+  {
+   "cat": "network",
+   "name": "Routing & switching"
+  },
+  {
+   "cat": "network",
+   "name": "WLAN & mobile networks"
   },
   {
    "cat": "languages",
-   "name": "Python",
-   "module": "Algorithmique et Programmation (S1)",
-   "mark": 18.6
+   "name": "C / C++"
   },
   {
    "cat": "languages",
-   "name": "Java & object design",
-   "module": "POO / Java+ (S3)",
-   "mark": 17.5
+   "name": "HTML, CSS & JavaScript"
   },
   {
    "cat": "languages",
-   "name": "C / C++",
-   "module": "Algorithmique et Programmation Avancée (S2)",
-   "mark": 16.8
+   "name": "Java"
   },
   {
    "cat": "languages",
-   "name": "PHP, HTML, CSS & JavaScript",
-   "module": "Programmation et Technologies Web (S2)",
-   "mark": 15.95
+   "name": "PHP"
+  },
+  {
+   "cat": "languages",
+   "name": "Python"
+  },
+  {
+   "cat": "languages",
+   "name": "SQL"
+  },
+  {
+   "cat": "quality",
+   "name": "Entrepreneurship"
+  },
+  {
+   "cat": "quality",
+   "name": "Knowledge management & technology watch"
+  },
+  {
+   "cat": "quality",
+   "name": "Project management & Agile"
+  },
+  {
+   "cat": "quality",
+   "name": "Records & content management (ECM)"
+  },
+  {
+   "cat": "quality",
+   "name": "Technical writing in English"
   }
  ],
  "contact": {
