@@ -8,3 +8,5 @@ tools/sitebuild/*
 !tools/sitebuild/raw.json
 *.bak-*
 .DS_Store
+/*.png
+/380

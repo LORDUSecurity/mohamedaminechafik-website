@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cloud Cost Prediction">
+  <!-- cloud over a rising bar chart -->
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.8" flood-color="#7ce7ff" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <g fill="none" stroke="#7ce7ff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <path d="M21.5 37 H43 A7.5 7.5 0 0 0 44.4 22.3 A11.5 11.5 0 0 0 23.6 19.6 A8 8 0 0 0 21.5 37 Z"/>
+    <path d="M24 55 V48"/>
+    <path d="M32 55 V43.5"/>
+    <path d="M40 55 V38"/>
+  </g>
+</svg>
