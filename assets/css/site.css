@@ -478,12 +478,12 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
    stick out of a clip-path that clips its own children, so the corner triangle
    hangs off the wrapper instead */
 .bub{position:relative;width:fit-content;max-width:100%;
-  animation:bub-in .55s cubic-bezier(.2,.7,.2,1) both}
+  animation:bub-in .46s cubic-bezier(.2,1.06,.3,1) both}
 .bub>.body{display:flow-root;--cut:12px;padding:12px 20px;background:var(--bb);color:var(--bk);
   font-size:clamp(15px,1.8vw,20px);line-height:1.45;letter-spacing:-.01em}
 .hero-about .bub>.body{font-size:clamp(14.5px,1.15vw,17.5px)}
-.bub.me{justify-self:end}
-.bub.them{justify-self:start}
+.bub.me{justify-self:end;transform-origin:100% 100%}
+.bub.them{justify-self:start;transform-origin:0% 100%}
 /* the corner nearest the frame is left square and throws a triangle out of it,
    the way a chat tail does — pointing away from the message, off the bottom.
    The tail overlaps the bubble by a pixel: butted flush against a fractional
@@ -501,10 +501,14 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .mt .tk{width:15px;height:10px;color:var(--dimmer)}
 .bub.me .mt,.bub.me .mt .tk{color:rgba(6,7,10,.6)}
 .bub.me .mt.seen .tk{color:#06070a}
-.b1{--bb:var(--accent);--bk:#06070a;animation-delay:.05s}
-.b2{--bb:#171b23;--bk:var(--ink);animation-delay:.25s}
-.b3{--bb:var(--accent);--bk:#06070a;font-weight:600;animation-delay:.45s}
-@keyframes bub-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.b1{--bb:var(--accent);--bk:#06070a;animation-delay:.06s}
+.b2{--bb:#171b23;--bk:var(--ink);animation-delay:.4s}
+.b3{--bb:var(--accent);--bk:#06070a;font-weight:600;animation-delay:.74s}
+/* a sent message does not fade in where it stands — it is pushed out of the
+   corner it hangs from and takes the room under it, so the bubble rises from
+   below while it opens, anchored on its own tail, and the three land one after
+   the other with a beat between rather than arriving as a block */
+@keyframes bub-in{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
 .edu{display:grid;gap:1px;background:rgba(255,255,255,.075)}
 .edu-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr) auto;gap:16px;
   background:#0a0c11;padding:15px 17px;align-items:baseline}
