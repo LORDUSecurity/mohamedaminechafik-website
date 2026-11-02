@@ -266,13 +266,18 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
   background:#0a0c10;border-bottom:1px solid rgba(255,255,255,.07)}
 /* the screenshot keeps its own colours but sits dimmed, so a white interface
    reads as one card among dark ones instead of firing at the eye; the top glow
-   is gone and the scrim under the caption is heavier. Hover lifts it back */
+   is gone and the scrim under the caption is heavier. At rest the shot is nearly
+   mono — the project colour is only a rumour — and hover gives it back: colour,
+   light, and a scrim that lifts so the whole plate brightens rather than the
+   pixels alone */
 .card-media img{position:relative;z-index:0;width:100%;height:100%;object-fit:cover;object-position:top center;
-  filter:contrast(1.04) saturate(.92) brightness(.8);transform:scale(1.005);
+  filter:contrast(1.08) saturate(.3) brightness(.62);transform:scale(1.005);
   transition:filter .45s ease, transform .9s cubic-bezier(.2,.7,.2,1)}
 .card-media::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
-  background:linear-gradient(180deg, rgba(6,7,10,.28) 0%, rgba(6,7,10,.08) 34%, rgba(9,10,13,.78) 100%)}
-.card:hover .card-media img{filter:contrast(1.02) saturate(1) brightness(.92);transform:scale(1.045)}
+  background:linear-gradient(180deg, rgba(6,7,10,.28) 0%, rgba(6,7,10,.08) 34%, rgba(9,10,13,.78) 100%);
+  transition:opacity .45s ease}
+.card:hover .card-media img,.card:focus-visible .card-media img{filter:contrast(1.02) saturate(1.1) brightness(1.02);transform:scale(1.045)}
+.card:hover .card-media::after,.card:focus-visible .card-media::after{opacity:.55}
 .card-media .scan{display:none}
 .card-media .idx{position:absolute;top:12px;left:14px;z-index:3;font-family:var(--mono);font-size:10px;letter-spacing:.18em;
   color:rgba(255,255,255,.6);background:rgba(6,7,10,.55);padding:3px 7px;border:1px solid rgba(255,255,255,.1)}
@@ -509,6 +514,16 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
    below while it opens, anchored on its own tail, and the three land one after
    the other with a beat between rather than arriving as a block */
 @keyframes bub-in{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
+/* a reaction lands after the line it reacts to has arrived, so it waits out the
+   thread's last beat and pops open on the corner rather than fading in. It hangs
+   off the wrapper, under the tail, clear of the stamp inside the bubble */
+.rx{position:absolute;right:26px;bottom:-26px;display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px 4px;background:#12151b;border:1px solid rgba(255,255,255,.16);border-radius:999px;
+  box-shadow:0 5px 14px rgba(6,7,10,.5);font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;
+  color:#cfd3da;animation:rx-pop .34s cubic-bezier(.2,1.5,.35,1) 1.42s both}
+.rx i{font-style:normal;font-size:13px;line-height:1.1}
+.rx b{font-weight:500}
+@keyframes rx-pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
 .edu{display:grid;gap:1px;background:rgba(255,255,255,.075)}
 .edu-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr) auto;gap:16px;
   background:#0a0c11;padding:15px 17px;align-items:baseline}
