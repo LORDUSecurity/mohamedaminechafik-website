@@ -51,9 +51,8 @@ window.SITE = {
    ],
    "hero": "02-ranking.webp",
    "links": {
-    "site": "https://zenodo.org/records/23460013",
-    "repo": "https://github.com/LORDUSecurity/litmus-ai-text-detector",
-    "rg": "https://www.researchgate.net/publication/416249089_Free-Tier_LLM_Gateways_as_AI-Text_Detectors_A_Dated_Benchmark_of_Model_Accuracy_Quota_Regimes_Availability_Churn_and_Out-of-Sample_Stability"
+    "site": "https://ai-text-ranking-630tcvp9y1c.qoder.website",
+    "repo": "https://github.com/LORDUSecurity/litmus-ai-text-detector"
    },
    "sample": {
     "id": "1gBA6zsvmzqTs4Pvi_zoqSU6Kh1x2BZAU",
@@ -66,6 +65,7 @@ window.SITE = {
     "rest-api-design",
     "angular",
     "auth-access-control",
+    "ai-engineering",
     "model-evaluation",
     "text-language-detection",
     "rag-retrieval",
@@ -152,6 +152,7 @@ window.SITE = {
     "rest-api-design",
     "react",
     "database-engineering",
+    "ai-engineering",
     "rag-retrieval",
     "build-release-git",
     "javascript",
@@ -221,6 +222,7 @@ window.SITE = {
    },
    "sample": null,
    "skills": [
+    "ai-engineering",
     "jupyter",
     "machine-learning",
     "model-evaluation",
@@ -304,6 +306,7 @@ window.SITE = {
     "react",
     "database-engineering",
     "auth-access-control",
+    "ai-engineering",
     "pyinstaller",
     "build-release-git",
     "credential-secret-protection",
@@ -372,6 +375,7 @@ window.SITE = {
    "sample": null,
    "skills": [
     "validation-uploads",
+    "ai-engineering",
     "build-release-git",
     "penetration-testing",
     "vulnerability-testing",
@@ -382,7 +386,7 @@ window.SITE = {
    "tags": [
     "security",
     "fullstack",
-    "cloud"
+    "ai"
    ]
   },
   {
@@ -449,6 +453,7 @@ window.SITE = {
     "validation-uploads",
     "database-engineering",
     "auth-access-control",
+    "ai-engineering",
     "build-release-git",
     "docker-reproducible",
     "vulnerability-testing",
@@ -527,6 +532,7 @@ window.SITE = {
     "design-system-styling",
     "database-engineering",
     "auth-access-control",
+    "ai-engineering",
     "build-release-git",
     "javascript",
     "html-css",
@@ -537,7 +543,7 @@ window.SITE = {
    "tags": [
     "fullstack",
     "languages",
-    "cloud"
+    "ai"
    ]
   },
   {
@@ -668,6 +674,7 @@ window.SITE = {
    "sample": null,
    "ask": false,
    "skills": [
+    "ai-engineering",
     "n8n",
     "pyinstaller",
     "build-release-git",
@@ -682,7 +689,7 @@ window.SITE = {
    "tags": [
     "cloud",
     "quality",
-    "security"
+    "ai"
    ]
   },
   {
@@ -739,6 +746,7 @@ window.SITE = {
    },
    "sample": null,
    "skills": [
+    "ai-engineering",
     "jupyter",
     "spss",
     "machine-learning",
@@ -812,6 +820,7 @@ window.SITE = {
    "skills": [
     "flask",
     "rest-api-design",
+    "ai-engineering",
     "langchain",
     "pyinstaller",
     "build-release-git",
@@ -825,7 +834,7 @@ window.SITE = {
    "tags": [
     "security",
     "fullstack",
-    "cloud"
+    "ai"
    ]
   }
  ],
@@ -1059,6 +1068,56 @@ window.SITE = {
     "ise": {
      "note": "Identity is the product: logins centralised on a policy service.",
      "ev": "resume: Cisco ISE, AAA"
+    }
+   }
+  },
+  {
+   "id": "ai-engineering",
+   "name": "AI engineering",
+   "cat": "ai",
+   "grp": "eng",
+   "icon": "spark",
+   "defn": "Guiding AI agents to build apps — steering the build and checking every output against the source — plus AI wired into the product itself: detection, retrieval, prediction and autonomous tooling.",
+   "uses": {
+    "litmus": {
+     "note": "The product is AI: 48 detectors ranked over a human/AI corpus with an offline engine, plus three committed n8n AI workflows. 4,025 model-run records back the benchmark.",
+     "ev": "benchmark/results-*.jsonl (4,025 records), ai-text-detector/n8n/*.json"
+    },
+    "esi": {
+     "note": "A four-tier RAG assistant answers from the course corpus — database first, FTS5 index second, a model last — built and published in its own agent session.",
+     "ev": "aichat/views.py; agent session 09f3c271"
+    },
+    "cse": {
+     "note": "A three-stage ML cascade — calibrated sentinel, vector classifier, rare-attack model — over 6.32M network flows, re-executed from the stored CSVs.",
+     "ev": "Cloud_Oriented_Intrusion_Detection_Modeling.ipynb, bench.md"
+    },
+    "cloud": {
+     "note": "A regression ladder from linear to random forest on EC2 spot prices, re-measured from the shipped CSV and cross-checked in SPSS.",
+     "ev": "cloud_price_bench.py, model_run.json, SPSS/*.spv"
+    },
+    "pentest": {
+     "note": "A LangChain ReAct agent drives recon, scan, exploit and report tools; the LLM stage stays optional and off in the shipped build so runs reproduce offline.",
+     "ev": "agent.py, tools/; agent session 7866f1f2"
+    },
+    "raxag": {
+     "note": "An n8n-orchestrated pipeline fans nine parser services out over the config dumps and writes the provisioning workbook back.",
+     "ev": "n8n/, docker-compose.yml"
+    },
+    "gameverse": {
+     "note": "Built and steered with AI agents, then human-reviewed — the heading-font defect was root-caused to an unshipped webfont and fixed in an agent session.",
+     "ev": "agent session 7866f1f2; commit 8551f2a"
+    },
+    "fixproof": {
+     "note": "Engineered with AI agents and human-reviewed: the crawler, the check suite and the retest harness were built in an agent session.",
+     "ev": "agent session 7866f1f2"
+    },
+    "crypto": {
+     "note": "Built with AI-agent assistance and human-reviewed.",
+     "ev": "operator-steered build"
+    },
+    "kids": {
+     "note": "Built with AI-agent assistance and human-reviewed.",
+     "ev": "operator-steered build"
     }
    }
   },
@@ -1760,6 +1819,10 @@ window.SITE = {
    "hue": 285,
    "groups": [
     {
+     "id": "eng",
+     "name": "AI engineering"
+    },
+    {
      "id": "ml",
      "name": "Machine learning"
     },
@@ -1772,7 +1835,7 @@ window.SITE = {
      "name": "Data preparation"
     }
    ],
-   "n": 8
+   "n": 9
   },
   {
    "id": "cloud",

@@ -21,7 +21,7 @@ PACKAGES = [
       groups=[("backend", "Backend"), ("frontend", "Frontend"),
               ("databases", "Databases"), ("auth", "Auth & access")]),
  dict(id="ai", name="AI & Data", hue=285,
-      groups=[("ml", "Machine learning"), ("nlp", "NLP & search"),
+      groups=[("eng", "AI engineering"), ("ml", "Machine learning"), ("nlp", "NLP & search"),
               ("data", "Data preparation")]),
  dict(id="cloud", name="Cloud & DevOps", hue=242,
       groups=[("cloud", "Cloud"), ("delivery", "Delivery"),
@@ -87,6 +87,7 @@ ICON = {
     "probability-calibration": "gauge", "class-imbalance-handling": "scales",
     "feature-selection": "funnel", "unsupervised-methods": "clusters",
     "gpu-computing": "chip", "model-evaluation-benchmarking": "chart",
+    "ai-engineering": "spark",
     "text-language-detection": "textscan", "full-text-search": "search",
     "grounded-retrieval-rag": "graph", "document-extraction": "extract",
     "vulnerability-reproduction": "replay", "cross-site-scripting-testing": "xss",
@@ -681,6 +682,36 @@ skills.append(dict(id="cloud-cost-spot-price-analysis", name="Cloud cost & spot-
                                "from the CIC-IDS2018 dataset hosted on AWS; pipeline re-executed "
                                "from stored CSVs on cloud infrastructure.",
                        "ev": "CSE-CIC-IDS2018-on-AWS/Datasets/, bench.md"}}))
+
+# AI engineering reads across the portfolio two ways: AI wired into the product
+# (detection, retrieval, prediction, agents) and agent-steered builds a human
+# checked. The ISE guide is a written reference, so it carries neither.
+skills.append(dict(id="ai-engineering", name="AI engineering", cat="ai", grp="eng", icon="spark",
+                   defn="Guiding AI agents to build apps — steering the build and checking every output "
+                        "against the source — plus AI wired into the product itself: detection, retrieval, "
+                        "prediction and autonomous tooling.",
+                   uses={
+                       "litmus": {"note": "The product is AI: 48 detectors ranked over a human/AI corpus with an offline engine, plus three committed n8n AI workflows. 4,025 model-run records back the benchmark.",
+                                  "ev": "benchmark/results-*.jsonl (4,025 records), ai-text-detector/n8n/*.json"},
+                       "esi": {"note": "A four-tier RAG assistant answers from the course corpus — database first, FTS5 index second, a model last — built and published in its own agent session.",
+                               "ev": "aichat/views.py; agent session 09f3c271"},
+                       "cse": {"note": "A three-stage ML cascade — calibrated sentinel, vector classifier, rare-attack model — over 6.32M network flows, re-executed from the stored CSVs.",
+                               "ev": "Cloud_Oriented_Intrusion_Detection_Modeling.ipynb, bench.md"},
+                       "cloud": {"note": "A regression ladder from linear to random forest on EC2 spot prices, re-measured from the shipped CSV and cross-checked in SPSS.",
+                                 "ev": "cloud_price_bench.py, model_run.json, SPSS/*.spv"},
+                       "pentest": {"note": "A LangChain ReAct agent drives recon, scan, exploit and report tools; the LLM stage stays optional and off in the shipped build so runs reproduce offline.",
+                                   "ev": "agent.py, tools/; agent session 7866f1f2"},
+                       "raxag": {"note": "An n8n-orchestrated pipeline fans nine parser services out over the config dumps and writes the provisioning workbook back.",
+                                 "ev": "n8n/, docker-compose.yml"},
+                       "gameverse": {"note": "Built and steered with AI agents, then human-reviewed — the heading-font defect was root-caused to an unshipped webfont and fixed in an agent session.",
+                                     "ev": "agent session 7866f1f2; commit 8551f2a"},
+                       "fixproof": {"note": "Engineered with AI agents and human-reviewed: the crawler, the check suite and the retest harness were built in an agent session.",
+                                    "ev": "agent session 7866f1f2"},
+                       "crypto": {"note": "Built with AI-agent assistance and human-reviewed.",
+                                  "ev": "operator-steered build"},
+                       "kids": {"note": "Built with AI-agent assistance and human-reviewed.",
+                                "ev": "operator-steered build"},
+                   }))
 
 skills.extend(dict(id=f["id"], name=f["name"], cat=f["cat"], grp=f["grp"],
                    defn=f["defn"], icon=f["icon"],
