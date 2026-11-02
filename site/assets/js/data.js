@@ -52,9 +52,7 @@ window.SITE = {
    "hero": "02-ranking.webp",
    "links": {
     "site": "https://ai-text-ranking-630tcvp9y1c.qoder.website",
-    "repo": "https://github.com/LORDUSecurity/litmus-ai-text-detector",
-    "zenodo": "https://zenodo.org/records/23460013",
-    "rg": "https://www.researchgate.net/publication/416249089_Free-Tier_LLM_Gateways_as_AI-Text_Detectors_A_Dated_Benchmark_of_Model_Accuracy_Quota_Regimes_Availability_Churn_and_Out-of-Sample_Stability"
+    "repo": "https://github.com/LORDUSecurity/litmus-ai-text-detector"
    },
    "sample": {
     "id": "1gBA6zsvmzqTs4Pvi_zoqSU6Kh1x2BZAU",
@@ -2174,7 +2172,6 @@ window.SITE = {
   "name": "Mohamed Amine Chafik",
   "role": "Cybersecurity engineering student · secure software developer",
   "location": "Rabat, Morocco",
-  "email": "sim.77.stp@gmail.com",
   "email_esi": "mohamed-amine.chafik@esi.ac.ma",
   "phone": "+212 7 11 91 42 51",
   "tel": "+212711914251",

@@ -764,15 +764,15 @@ for key, meta in sorted(P.items(), key=lambda kv: kv[1]["order"]):
     projects.append(proj)
 
 # ---------------------------------------------------------------- contact ---
-# Phone, e-mail and LinkedIn come from the current CV
+# Phone and LinkedIn come from the current CV
 # (pdf/Mohamed_Amine_Chafik_CV_EN 2-10.pdf, 2 Oct 2026); the older markdown CV
 # carries a placeholder LinkedIn slug, so it is not used. Instagram and
-# Facebook were given by the user on 2026-11-01.
+# Facebook were given by the user on 2026-11-01. The ESI address is the only
+# mailbox the site publishes (2026-11-02) — the personal Gmail is dropped.
 CONTACT = dict(
     name="Mohamed Amine Chafik",
     role="Cybersecurity engineering student · secure software developer",
     location="Rabat, Morocco",
-    email="sim.77.stp@gmail.com",
     email_esi="mohamed-amine.chafik@esi.ac.ma",
     phone="+212 7 11 91 42 51",
     tel="+212711914251",
