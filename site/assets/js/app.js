@@ -687,27 +687,28 @@ function renderAbout() {
     (stamp ? `<span class="mt${seen ? ' seen' : ''}"><time>${stamp}</time>${side === 'me' ? tick : ''}</span>` : '') +
     `</span></p>`;
   const convo = `
-    <section class="jack-sec">
-      <div class="jack" aria-label="Jack of all trades">
-        ${bub('me', 'b1', 'Jack of all trades,', '09:41', true)}
-        ${bub('them', 'b2', 'master of none,', '09:41')}
-        ${bub('me', 'b3', 'but oftentimes better than a master of one.', '09:43')}
-      </div>
-    </section>`;
+    <div class="jack" aria-label="Jack of all trades">
+      ${bub('me', 'b1', 'Jack of all trades,', '09:41', true)}
+      ${bub('them', 'b2', 'master of none,', '09:41')}
+      ${bub('me', 'b3', 'but oftentimes better than a master of one.', '09:43')}
+    </div>`;
 
   app.innerHTML = `
-  <section class="hero wrap">
-    <div class="eyebrow"><i></i>about · 2026</div>
-    <h1 class="hero-title"><span class="g" data-text="About">About</span></h1>
-    <p class="hero-sub">${esc(C.role)} in Rabat, finishing the engineering degree at ESI. Eleven builds are
-      catalogued here — applications, platforms and two internships — each with the measurement behind its
-      claims rather than an adjective.</p>
-    <div class="hero-meta">
-      <div><b>${projects.length}</b>works</div>
-      <div><b>${D.skills.length}</b>skills</div>
-      <div><b>1</b>certification</div>
-      <div><b>2</b>internships</div>
+  <section class="hero wrap hero-about">
+    <div class="hero-main">
+      <div class="eyebrow"><i></i>about · 2026</div>
+      <h1 class="hero-title"><span class="g" data-text="About">About</span></h1>
+      <p class="hero-sub">${esc(C.role)} in Rabat, finishing the engineering degree at ESI. Eleven builds are
+        catalogued here — applications, platforms and two internships — each with the measurement behind its
+        claims rather than an adjective.</p>
+      <div class="hero-meta">
+        <div><b>${projects.length}</b>works</div>
+        <div><b>${D.skills.length}</b>skills</div>
+        <div><b>1</b>certification</div>
+        <div><b>2</b>internships</div>
+      </div>
     </div>
+    ${convo}
   </section>
 
   <article class="about wrap">
@@ -748,24 +749,21 @@ function renderAbout() {
             <i>FixProof · Cisco ISE internship · OCI certified</i></li>
         </ul>
       </div>
-      <div class="about-side">
-        ${convo}
-        <aside class="about-card">
-          <div class="face">
-            <dl>
-              <div><dt>Based in</dt><dd>${esc(C.location)}</dd></div>
-              <div><dt>Studying</dt><dd>ISSIC — ESI Rabat</dd></div>
-              <div><dt>Graduating</dt><dd>July 2027</dd></div>
-              <div><dt>Certified by</dt><dd>Oracle — OCI Security Professional</dd></div>
-              <div><dt>Languages</dt><dd>Arabic (native) · English (advanced) · French (intermediate)</dd></div>
-            </dl>
-            <div class="actions">
-              <a class="btn btn-accent cut cut-4" href="#/contact"><span class="face">Contact <span class="arr">↗</span></span></a>
-              <a class="btn btn-ghost cut cut-4" href="#/"><span class="face">The work</span></a>
-            </div>
+      <aside class="about-card">
+        <div class="face">
+          <dl>
+            <div><dt>Based in</dt><dd>${esc(C.location)}</dd></div>
+            <div><dt>Studying</dt><dd>ISSIC — ESI Rabat</dd></div>
+            <div><dt>Graduating</dt><dd>July 2027</dd></div>
+            <div><dt>Certified by</dt><dd>Oracle — OCI Security Professional</dd></div>
+            <div><dt>Languages</dt><dd>Arabic (native) · English (advanced) · French (intermediate)</dd></div>
+          </dl>
+          <div class="actions">
+            <a class="btn btn-accent cut cut-4" href="#/contact"><span class="face">Contact <span class="arr">↗</span></span></a>
+            <a class="btn btn-ghost cut cut-4" href="#/"><span class="face">The work</span></a>
           </div>
-        </aside>
-      </div>
+        </div>
+      </aside>
     </div>
 
     <section class="d-section">
