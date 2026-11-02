@@ -60,9 +60,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 body.fx-cursor .bg-cursor{opacity:1}
 .bg-glow{
   position:absolute;left:50%;top:-38vh;width:120vw;height:90vh;transform:translateX(-50%);
+  /* no white in the ambient wash: the header's backdrop blur would smear it into
+     a bar across the nav. The white light lives on the cursor layer instead */
   background:
     radial-gradient(closest-side at 30% 40%, rgba(79,141,255,.14), transparent 70%),
-    radial-gradient(closest-side at 72% 30%, rgba(255,255,255,.10), transparent 70%),
     radial-gradient(closest-side at 50% 30%, rgba(255,69,58,.07), transparent 70%);
   filter:blur(20px);
 }
@@ -79,7 +80,7 @@ body.fx-cursor .bg-cursor{opacity:1}
   position:fixed;inset:0 0 auto;z-index:40;height:68px;
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;
   padding:0 clamp(16px,4vw,44px);
-  background:linear-gradient(180deg, rgba(6,7,10,.92), rgba(6,7,10,.55) 70%, transparent);
+  background:linear-gradient(180deg, rgba(6,7,10,.97), rgba(6,7,10,.86) 70%, rgba(6,7,10,.6));
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-bottom:1px solid rgba(255,255,255,.055);
 }
