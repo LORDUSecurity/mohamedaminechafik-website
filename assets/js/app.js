@@ -619,9 +619,10 @@ const WA = `https://wa.me/${C.whatsapp}`;
 const handle = u => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 
 const CHANNELS = [
-  ['mail', 'Email', C.email, `mailto:${C.email}`],
-  ['phone', 'Phone', C.phone, `tel:${C.tel}`],
-  ['chat', 'WhatsApp', C.phone, WA],
+  ['mail', 'Email', C.email_esi, `mailto:${C.email_esi}`],
+  /* one row for the number — it is the same line for a call and for a chat, and
+     WhatsApp is the half that also answers on a desktop, so it owns the href */
+  ['chat', 'WhatsApp · phone', C.phone, WA],
 ];
 const SOCIALS = [
   ['brand:github', 'GitHub', handle(C.github), C.github],
@@ -828,7 +829,7 @@ function renderContact() {
       <section>
         <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Channels</h2><span class="sec-line"></span></div>
         <div class="chan-list">
-          ${[...CHANNELS, ['mail', 'ESI address', C.email_esi, `mailto:${C.email_esi}`]]
+          ${CHANNELS
             .map(([ic, l, v, h]) => `<a class="chan" href="${h}">${icon(ic)}<span><b>${esc(l)}</b><i>${esc(v)}</i></span><span class="arr">↗</span></a>`).join('')}
         </div>
       </section>
@@ -895,7 +896,7 @@ function renderFooter() {
   <div class="foot-actions">
     <a class="btn cut cut-4" href="museum/index.html"><span class="face">Enter the museum <span class="arr">↗</span></span></a>
   </div>
-  <p class="foot-fine">© 2026 ${esc(C.name)} · ${esc(C.location)} · ${esc(C.email)}</p>`;
+  <p class="foot-fine">© 2026 ${esc(C.name)} · ${esc(C.location)} · ${esc(C.email_esi)}</p>`;
 }
 
 /* --------------------------------------------------------------- boot --- */
