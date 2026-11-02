@@ -149,6 +149,9 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .hero-sub b{color:var(--ink);font-weight:500}
 .hero-meta{display:flex;gap:34px;flex-wrap:wrap;margin-top:34px;font-family:var(--mono);font-size:11px;color:var(--dimmer);letter-spacing:.14em;text-transform:uppercase}
 .hero-meta b{display:block;color:var(--ink);font-family:var(--display);font-size:30px;letter-spacing:0;font-weight:600;margin-bottom:2px}
+/* the about hero carries the thread in a second column, level with the title */
+.hero-about{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(290px,.92fr);
+  gap:clamp(30px,5vw,70px);align-items:start}
 
 /* glitch title */
 .g{position:relative;display:inline-block}
@@ -426,7 +429,6 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 /* ============================================================== about ==== */
 .about{padding:10px 0 70px}
 .about-top{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.85fr);gap:clamp(20px,3vw,40px);align-items:start}
-.about-side{min-width:0;display:grid;gap:clamp(22px,3vw,34px);align-content:start}
 .about-prose p{color:#b9bec7;font-size:15.5px;line-height:1.7;margin-bottom:16px}
 .about-prose p:first-child{font-size:18px;color:var(--ink);line-height:1.6}
 .can-list{margin-top:18px;display:grid;gap:1px;background:rgba(255,255,255,.075)}
@@ -452,13 +454,9 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
    the first and last lines — both his — come from the same side and the answer
    lands where his other message landed. Each bubble stamps the time it was
    sent; the sender's carry the ticks, solid when read and translucent when not.
-   The thread stands in the right column and is its own surface: the gap above
-   it and a frosted face keep it a separate object rather than boxed text. */
-.jack-sec{--cut:16px;padding:1px;clip-path:var(--shape-4);
-  background:linear-gradient(150deg,rgba(255,255,255,.15),rgba(255,255,255,.045))}
-.jack{--cut:16px;clip-path:var(--shape-4);display:grid;gap:14px;padding:20px 18px 22px;
-  background:color-mix(in srgb,var(--panel) 68%,transparent);
-  backdrop-filter:blur(16px) saturate(.85);-webkit-backdrop-filter:blur(16px) saturate(.85)}
+   The thread stands beside the title with nothing behind it: the gap is the
+   only thing that keeps it a separate object, so it is wide. */
+.jack{display:grid;gap:14px;margin-top:39px}
 /* the bubble is the wrapper and the paint is clipped inside it: a tail cannot
    stick out of a clip-path that clips its own children, so the corner triangle
    hangs off the wrapper instead */
@@ -466,7 +464,7 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
   animation:bub-in .55s cubic-bezier(.2,.7,.2,1) both}
 .bub>.body{display:flow-root;--cut:12px;padding:12px 20px;background:var(--bb);color:var(--bk);
   font-size:clamp(15px,1.8vw,20px);line-height:1.45;letter-spacing:-.01em}
-.about-side .bub>.body{font-size:clamp(14.5px,1.15vw,17.5px)}
+.hero-about .bub>.body{font-size:clamp(14.5px,1.15vw,17.5px)}
 .bub.me{justify-self:end}
 .bub.them{justify-self:start}
 /* the corner nearest the frame is left square and throws a triangle out of it,
@@ -592,10 +590,9 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 @media (max-width:980px){
   .d-top{grid-template-columns:minmax(0,1fr)}
   .about-top,.contact-grid{grid-template-columns:minmax(0,1fr)}
-  /* one column: dissolve the wrapper so the thread can lead again and the card
-     stay under the list, the way they read before the thread moved right */
-  .about-side{display:contents}
-  .jack-sec{order:-1}
+  /* one column: the thread drops under the hero text and keeps its distance */
+  .hero-about{grid-template-columns:minmax(0,1fr)}
+  .jack{margin-top:30px}
   .foot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .d-aside{order:2}
   .cert-top{grid-template-columns:1fr}
