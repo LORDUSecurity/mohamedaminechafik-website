@@ -677,20 +677,23 @@ function renderAbout() {
   /* the quote walked as a thread: the two lines that are his sit on the sender's
      side, the heckler's line opposite. A real chat says when each line landed and
      whether it was read, so each bubble carries its time and the sender's carry
-     the ticks — the first read (the reply proves it), the last still waiting. The
-     paint is clipped in an inner box so the tail can leave the corner. */
+     the ticks — both his are read now, the last one solid because the reactions
+     under it prove it landed. The paint is clipped in an inner box so the tail
+     can leave the corner. */
   const tick = '<svg class="tk" viewBox="0 0 18 12" fill="none" stroke="currentColor" ' +
     'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M1.2 6.4 4 9.2 10.6 2.2"/><path d="M7.8 6.4 10.6 9.2 17.2 2.2"/></svg>';
-  const bub = (side, cls, text, stamp, seen) =>
+  const bub = (side, cls, text, stamp, seen, react) =>
     `<p class="bub ${side} ${cls}"><span class="body">${text}` +
     (stamp ? `<span class="mt${seen ? ' seen' : ''}"><time>${stamp}</time>${side === 'me' ? tick : ''}</span>` : '') +
-    `</span></p>`;
+    `</span>` +
+    (react ? `<span class="rx" aria-label="${react.n} reactions"><i aria-hidden="true">${react.e}</i><b>${react.n}</b></span>` : '') +
+    `</p>`;
   const convo = `
     <div class="jack" aria-label="Jack of all trades">
       ${bub('me', 'b1', 'Jack of all trades,', '09:41', true)}
       ${bub('them', 'b2', 'master of none,', '09:41')}
-      ${bub('me', 'b3', 'but oftentimes better than a master of one.', '09:43')}
+      ${bub('me', 'b3', 'but oftentimes better than a master of one.', '09:43', true, { e: '💯', n: 100 })}
     </div>`;
 
   app.innerHTML = `
