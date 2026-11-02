@@ -281,7 +281,7 @@ function renderHome(state) {
       const c = catById[id];
       return `<button type="button" class="ctag" data-cat="${id}" style="--h:${catColor(c)}" aria-label="Filter by ${esc(c.name)}"><span>${esc(c.name)}</span></button>`;
     }).join('');
-    return `<article class="card" role="link" tabindex="0" data-href="#/p/${p.id}" style="--shape:${chamfer(p.cuts)}" aria-label="${esc(p.name)}">
+    return `<article class="card" role="link" tabindex="0" data-href="#/p/${p.id}" style="--accent:${accent(p)};--shape:${chamfer(p.cuts)}" aria-label="${esc(p.name)}">
       <div class="face">
         <div class="card-media">
           <img src="${img(p, p.hero)}" alt="${esc(p.name)} interface" loading="${i < 4 ? 'eager' : 'lazy'}" decoding="async">

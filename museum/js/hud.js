@@ -38,10 +38,6 @@ const esc = s => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const fmtSize = b => b >= 1e9 ? (b / 1e9).toFixed(1) + ' GB'
   : b >= 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.round(b / 1e3) + ' KB';
-const DRIVE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
-  '<path d="M3.5 18l4-8h9l4 8z"/><path d="M7.5 10l2.5-5h4l2.5 5"/></svg>';
-const MAIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
-  '<rect x="3" y="5.5" width="18" height="13"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>';
 
 /* --------------------------------------------------------------- the door */
 
@@ -63,16 +59,22 @@ function buildChrome() {
   /* the door is on screen for the whole walk, over the welcome and the farewell
      alike: leaving the room is never something the visitor has to hunt for */
   el.door.innerHTML = '<a class="btn btn-ico btn-ghost" href="' + SITE + '" title="Exit to the portfolio" aria-label="Exit to the portfolio">' +
-    '<span class="face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
-    '<path d="M13 4.5h5.5v15H13"/><path d="M4.5 12h7M9 8.5l3.5 3.5L9 15.5"/></svg></span></a>';
+    '<span class="face">' + icon('exit') + '</span></a>';
 
   /* the channels are offered once, at the end of the walk */
   [
     btn(SITE, 'Enter the portfolio', '<span class="arr">&nearr;</span>', '', true),
     btn(CONTACT.github, '', icon('brand:github'), 'btn-ico'),
     btn(CONTACT.linkedin, '', icon('brand:linkedin'), 'btn-ico'),
-    btn('mailto:' + CONTACT.email_esi, '', MAIL, 'btn-ico')
+    btn('mailto:' + CONTACT.email_esi, '', icon('mail'), 'btn-ico')
   ].forEach(b => el.ctaEnd.appendChild(b));
+
+  /* the plate's download and the dossier's close are set in the markup, but the
+     marks themselves come from the portfolio's shared set like every other button */
+  [['#hueBtn .face', 'download'], ['#dClose .face', 'close']].forEach(pair => {
+    const face = $(pair[0]);
+    if (face) face.innerHTML = icon(pair[1]);
+  });
 }
 
 /* ---------------------------------------------------------- exhibit card */
@@ -100,7 +102,7 @@ function buildCapLinks(d) {
     links.repo ? '<a class="btn btn-ico" href="' + esc(links.repo) + '" target="_blank" rel="noopener" title="Repository" aria-label="Repository">' +
       '<span class="face">' + icon('brand:github') + '</span></a>' : '',
     links.drive ? '<a class="btn btn-ico" href="' + esc(links.drive) + '" target="_blank" rel="noopener" title="Drive folder" aria-label="Drive folder">' +
-      '<span class="face">' + DRIVE + '</span></a>' : ''
+      '<span class="face">' + icon('brand:googledrive') + '</span></a>' : ''
   ].join('');
 }
 

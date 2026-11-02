@@ -305,12 +305,18 @@
      The clip is written out rather than built from --cut, because --cut is the
      plate's wedge size and a button must not inherit it. */
   .btn{--edge:var(--line-2);display:inline-flex;background:var(--edge);padding:1px;
+    /* the plate's buttons are <button>s; without this the UA's 2px outset border
+       paints inside the chamfer and adds 6px the portfolio's anchors never have */
+    border:none;
     clip-path:polygon(0 10px,10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px));
     pointer-events:auto;cursor:pointer;text-decoration:none;
     transition:background .2s ease,filter .25s ease,transform .2s ease}
   .btn>.face{display:inline-flex;align-items:center;gap:10px;background:var(--panel);padding:12px 18px;
     clip-path:polygon(0 10px,10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px));
     font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    /* 1.55 is the portfolio's body leading — the buttons inherit it so a face here
+       measures the same 44.1px as one there, not a shorter one */
+    line-height:1.55;
     color:var(--ink);white-space:nowrap;transition:background .2s ease,color .2s ease}
   .btn:hover{--edge:var(--accent);filter:drop-shadow(0 0 14px color-mix(in srgb, var(--edge) 45%, transparent))}
   .btn:hover>.face{background:color-mix(in srgb, var(--accent) 12%, var(--panel));color:#fff}
@@ -320,12 +326,16 @@
      way the portfolio's repo / record buttons fill theirs */
   .btn svg{width:18px;height:18px;flex:none}
   .btn svg.brand{fill:currentColor;stroke:none}
-  .btn .arr{color:var(--accent);font-size:13px;line-height:1}
+  .btn .arr{color:var(--accent);font-size:13px}
   .btn-ghost>.face{background:transparent;color:var(--dim)}
   .btn-ghost:hover>.face{color:var(--ink)}
   /* logo-only marks flood the plate and knock out dark inside a glow — the same
-     neon hover the portfolio's repo / drive / record buttons carry */
-  .btn-ico>.face{padding:11px 14px}
+     neon hover the portfolio's repo / drive / record buttons carry.
+     The portfolio's mark buttons reach 44.1px by stretching to the text button
+     beside them; the museum also hangs them alone (the plate's download, the
+     dossier's close), so they carry that height outright: the text face is a
+     13px arrow line at the 1.55 leading plus 12px top and bottom. */
+  .btn-ico>.face{padding:11px 14px;min-height:calc(13px * 1.55 + 24px)}
   .btn-ico img{width:18px;height:18px;object-fit:contain}
   .btn-ico:hover>.face{background:var(--accent);color:#06070a}
   .btn-ico:hover svg{filter:drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 85%, transparent)) brightness(0)}
@@ -346,12 +356,12 @@
   /* the row of controls under the plate */
   #cap .under{width:100%;display:flex;flex-direction:column;gap:12px;align-items:flex-start;margin-top:2px}
   #cap.right .under{align-items:flex-end}
-  #cap .tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  #cap .tools{display:flex;gap:9px;align-items:stretch;flex-wrap:wrap}
   #cap .tools .btn{--edge:color-mix(in srgb, var(--accent) 40%, var(--line-2))}
   #cap .tools .btn[disabled]{opacity:.34;pointer-events:none}
   /* the work's own channels, small beside the dossier button: the same logo-only
      marks the portfolio's detail page uses, never a second row of labels */
-  #capLinks{display:inline-flex;gap:9px;align-items:center}
+  #capLinks{display:inline-flex;gap:9px;align-items:stretch}
   #capLinks:empty{display:none}
 
   /* the copy is struck under the picture, not in the plate: hud.js seats this
@@ -607,7 +617,7 @@
     <span class="dl">
       <button type="button" class="btn btn-ico" id="hueBtn" aria-haspopup="true" aria-expanded="false"
               aria-label="Download a high-resolution copy of this artwork" title="Download a high-resolution copy of this artwork">
-        <span class="face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.5v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/></svg></span>
+        <span class="face"></span>
       </button>
       <div id="hue" role="menu" aria-label="Choose a corruption colour"></div>
     </span>
@@ -637,7 +647,7 @@
       <h3>How it is built</h3>
       <p class="dhint">Hover a ticket to read how it was used here</p>
       <div class="tags" id="dTech"></div>
-    </div><button type="button" class="btn btn-ico dclose" id="dClose" aria-label="Close"><span class="face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6L6 18"/></svg></span></button></div>
+    </div><button type="button" class="btn btn-ico dclose" id="dClose" aria-label="Close"><span class="face"></span></button></div>
   </div>
 
   <!-- the ticket's note: outside the sheet, so the dossier's own scroll and clip
@@ -680,7 +690,7 @@
   <script src="lib/addon-globals.js"></script>
   <script src="lib/gsap.min.js"></script>
   <script src="lib/ScrollTrigger.min.js"></script>
-  <script src="../assets/js/icons.js"></script>
+  <script src="../assets/js/icons.js?v=4"></script>
   <script src="js/skin.js"></script>
   <script src="js/works.js"></script>
   <script src="js/art.js"></script>
