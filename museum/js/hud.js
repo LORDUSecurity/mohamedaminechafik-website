@@ -27,7 +27,7 @@ function icon(name) {
 
 const $ = sel => document.querySelector(sel);
 const el = {};
-['door', 'ctaEnd', 'cap', 'capLinks', 'capSkills', 'moreBtn', 'artdl', 'hueBtn', 'hue', 'detail',
+['door', 'ctaEnd', 'cap', 'capLinks', 'moreBtn', 'artdl', 'hueBtn', 'hue', 'detail',
  'tip', 'tipCat', 'tipName', 'tipNote', 'tipEv', 'tipEvRow'].forEach(id => {
   el[id] = document.getElementById(id);
 });
@@ -72,9 +72,11 @@ function buildChrome() {
   /* the marks come from the portfolio's shared set like every other button. The
      download is the one control a visitor has to find on their own under a
      painting, so it carries its name as well as its glyph — an anonymous arrow
-     reads as part of the frame, not as the thing that gives you a copy. */
+     reads as part of the frame, not as the thing that gives you a copy. One
+     glyph only: the download mark already points down, and a second arrow after
+     the words read as a control that had not finished being labelled. */
   const dl = $('#hueBtn .face');
-  if (dl) dl.innerHTML = icon('download') + '<span>Download artwork</span><span class="arr">&darr;</span>';
+  if (dl) dl.innerHTML = icon('download') + '<span>Download artwork</span>';
   const close = $('#dClose .face');
   if (close) close.innerHTML = icon('close');
 }
@@ -92,26 +94,9 @@ function onFocus(e) {
   el.cap.querySelector('.out').textContent = d ? d.output : '';
   el.moreBtn.disabled = !d;
   buildHueMenu(w);
-  buildCapSkills(d);
   buildCapLinks(d);
   measure();
 }
-
-/* What the work is built from, on the face of the card, in the portfolio's
-   chip shape: enough to say what you are looking at without opening anything,
-   and short enough that the plate stays a card rather than a second dossier.
-   Tapping one opens the dossier, where the chip carries its full note. */
-function buildCapSkills(d) {
-  const t = ((d && d.tech) || []).slice(0, 4);
-  el.capSkills.innerHTML = t.map(x =>
-    '<button type="button" class="tag" style="--h:hsl(' + x.hue + ' 92% 62%)" ' +
-    'aria-label="' + esc(x.name) + ' — open the details"><span class="face">' +
-    icon(x.icon) + '<span>' + esc(x.name) + '</span></span></button>').join('');
-}
-
-el.capSkills && el.capSkills.addEventListener('click', ev => {
-  if (ev.target.closest('.tag')) openDetail();
-});
 
 /* beside the dossier button, the work's own two channels as logo-only marks —
    the same small buttons the portfolio's detail page carries */
@@ -191,26 +176,41 @@ document.addEventListener('click', ev => {
 
 /* ------------------------------------------------- the copy under the picture
 
-   The control belongs to the canvas, not to the plate: it is seated from the
-   lens every frame, on the picture's own bottom edge, so it stays under the
-   artwork whichever side the card has taken. On a phone the card owns the
-   bottom of the screen, so the control is held above it instead of behind it.
+   On a wide screen the control belongs to the canvas, not to the plate: it is
+   seated from the lens every frame, on the picture's own bottom edge, so it
+   stays under the artwork whichever side the card has taken. A phone has no
+   plaster left under the picture — the card owns the bottom of the screen — so
+   there the node is moved into the card's own row of actions and laid out by
+   CSS, and nothing is parked on top of the frame.
 
    The file itself is struck by main.js, off the plate at the source picture's
    own resolution — this only asks for it and hands over the blob. */
 
-let dlW = 44, dlH = 44, capTop = Infinity, narrow = false;
+let dlW = 44, dlH = 44, narrow = false;
 let seatedY = -1;
+/* where the control lives when it is free of the card */
+const dlHome = el.artdl ? { parent: el.artdl.parentNode, next: el.artdl.nextSibling } : null;
+
+/* one move per layout change, not one per frame */
+function seatDlHost() {
+  if (!el.artdl || !dlHome) return;
+  const inCard = !!el.artdl.closest('#cap .tools');
+  if (narrow === inCard) return;
+  if (narrow) {
+    document.querySelector('#cap .tools').appendChild(el.artdl);
+    el.artdl.style.left = el.artdl.style.top = '';
+  } else {
+    dlHome.parent.insertBefore(el.artdl, dlHome.next);
+  }
+}
 
 function measure() {
   if (!el.artdl) return;
+  narrow = window.matchMedia('(max-width: 760px)').matches;
+  seatDlHost();
+  if (narrow) return;
   dlW = el.artdl.offsetWidth || 44;
   dlH = el.artdl.offsetHeight || 44;
-  narrow = window.matchMedia('(max-width: 760px)').matches;
-  const holder = el.cap.querySelector('.holder');
-  /* the plate's own box, read once per stop rather than once per frame: a layout
-     read in the render loop would cost the walk a reflow every frame */
-  capTop = narrow && holder ? holder.getBoundingClientRect().top : Infinity;
 }
 
 function rectOfPainting(e, camera, cw, ch) {
@@ -249,9 +249,11 @@ function placeArtDl() {
     a.classList.remove('on');
     return;
   }
+  /* in the card, CSS owns the box: the control only has to know whether the
+     picture it offers a copy of is the one on screen */
+  if (narrow) { a.classList.add('on'); return; }
   const x = Math.max(dlW / 2 + 8, Math.min(cw - dlW / 2 - 8, r.x + r.w / 2));
   let y = r.y + r.h + 12;
-  if (narrow) y = Math.min(y, capTop - dlH - 10);
   y = Math.max(8, Math.min(y, ch - dlH - 8));
   a.style.left = Math.round(x) + 'px';
   a.style.top = Math.round(y) + 'px';

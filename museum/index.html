@@ -112,11 +112,15 @@
      The holder is the bare layout box both of them measure themselves against.
      The painting's own credit is deliberately not in the card — it hangs under
      the plate on the plaster, in small mono type. */
+  /* The glass is dark first and blurred second. At 74% the lit wall behind the
+     plate bled through and the card read as an olive panel in the work's colour
+     rather than as neutral glass, so the panel holds nearly all of the mix and
+     the blur only softens what little of the room still shows. */
   #cap .holder { position: relative; width: 100%; }
   #cap .plate { background: var(--edge, color-mix(in srgb, var(--accent) 46%, var(--line-2)));
     padding: 1px; }
   #cap .sheet {
-    background: color-mix(in srgb, var(--panel) 74%, transparent);
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
     backdrop-filter: blur(26px) brightness(.86) saturate(.82);
     -webkit-backdrop-filter: blur(26px) brightness(.86) saturate(.82);
     padding: clamp(34px, 3.8vw, 52px) clamp(32px, 3.5vw, 48px) clamp(26px, 2.8vw, 38px);
@@ -141,9 +145,6 @@
     font-family: var(--mono); font-size: 9.5px; letter-spacing: .28em; text-transform: uppercase;
     color: color-mix(in srgb, var(--accent) 78%, white 22%);
     margin-bottom: 20px; }
-  #cap .n::before { content: ''; width: 5px; height: 5px; flex: none;
-    background: var(--accent); transform: rotate(45deg);
-    box-shadow: 0 0 10px var(--accent); }
 
   /* Every mark sits inside the same square chip — a neon-bordered tile in the
      work's colour, its chamfer matching the plate's — with the app's own logo
@@ -188,13 +189,12 @@
   #cap.on .n         { transition-delay: 120ms; }
   #cap.on .titlerow  { transition-delay: 210ms; }
   #cap.on p          { transition-delay: 300ms; }
-  #cap.on .skills    { transition-delay: 390ms; }
-  #cap.on .tools     { transition-delay: 480ms; }
+  #cap.on .tools     { transition-delay: 390ms; }
   /* The controls belong to the stop, not to the room: they arrive with the plate
      and are inert while it is away, or a visitor would be clicking a button that
      hangs over bare plaster between two pictures. */
-  #cap .tools, #cap .skills { pointer-events: none; }
-  #cap.on .tools, #cap.on .skills { pointer-events: auto; }
+  #cap .tools { pointer-events: none; }
+  #cap.on .tools { pointer-events: auto; }
   #cap .t { opacity: 0; transition: opacity 420ms ease 380ms; }
   #cap.on .t { opacity: 1; }
   /* reduced motion keeps the fade — the text still has to arrive in order —
@@ -353,11 +353,10 @@
     transition:opacity .7s ease}
   #door.on{opacity:1}
 
-  /* the card carries its own controls: the work's skills, then the buttons that
-     act on it — the plate is one object on the wall, not a card with things
-     glued to the plaster underneath */
-  #cap .skills{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px}
-  #cap .skills:empty{display:none}
+  /* the card carries its own controls: the buttons that act on it — the plate is
+     one object on the wall, not a card with things glued to the plaster
+     underneath. What the work is built from stays in the dossier, where a
+     ticket has a note to carry; on the plate it was a second headline. */
   #cap .tools{display:flex;gap:9px;align-items:stretch;flex-wrap:wrap;margin-top:22px}
   #cap .tools .btn{--edge:color-mix(in srgb, var(--accent) 40%, var(--line-2))}
   #cap .tools .btn[disabled]{opacity:.34;pointer-events:none}
@@ -375,6 +374,10 @@
   #artdl.on .dl{pointer-events:auto}
   #artdl .btn{--edge:color-mix(in srgb, var(--accent) 55%, var(--line-2));
     filter:drop-shadow(0 6px 18px rgba(6,7,10,.72))}
+  /* the house height is a 13px arrow line plus the face's 12px of padding. A
+     button that carries no arrow — the download is glyph and words — would come
+     in 2px short of every other control in the room, so it holds the height. */
+  #artdl .btn>.face{min-height:calc(13px * 1.55 + 24px)}
   /* striking a plate takes a second: the control says so rather than looking
      dead, and cannot be asked twice while it is at it */
   #artdl.busy .dl{pointer-events:none}
@@ -547,18 +550,20 @@
     #cap, #cap.left, #cap.right {
       top: auto; bottom: 0; left: 0; right: 0; width: auto;
       align-items: flex-start; text-align: left; justify-content: flex-end;
-      padding: 0 18px calc(min(7vh, 54px) + env(safe-area-inset-bottom));
+      padding: 0 18px calc(min(4vh, 32px) + env(safe-area-inset-bottom));
     }
     #cap.left::before, #cap.right::before {
       inset: auto -16vw 0; height: 62vh;
       background: linear-gradient(to top, rgba(6,7,10,.84), rgba(6,7,10,.5) 32%,
         rgba(6,7,10,.16) 56%, rgba(6,7,10,0) 78%);
     }
-    #cap .sheet { padding: clamp(22px, 5.6vw, 30px) clamp(20px, 5.2vw, 26px) clamp(18px, 4.6vw, 24px); }
-    #cap p { max-width: 46ch; font-size: 13px; }
+    #cap .sheet { padding: clamp(20px, 5vw, 26px) clamp(18px, 4.8vw, 24px) clamp(14px, 3.8vw, 18px); }
+    /* The card is a caption on a phone, not the whole dossier: four lines and a
+       way in. Truncating here is what buys the picture its own height. */
+    #cap p { max-width: 46ch; font-size: 13px; margin-top: 14px;
+      display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    #cap .n { margin-bottom: 14px; }
     #cap .t { display: none; }
-    #cap .skills { margin-top: 16px; }
-    #cap .tools { justify-content: flex-start; flex-wrap: wrap; }
     #prog { display: none; }
     /* the door moves clear of the notch, and the welcome stack tightens */
     #door { top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); }
@@ -566,9 +571,23 @@
     #title .hint { margin-top: 30px; }
     #end .cta { margin-top: 24px; gap: 8px; }
     #end .cta .btn > .face { padding: 9px 12px; font-size: 9.5px; }
-    /* the download stays a thumb-sized target under the picture; hud.js keeps it
-       clear of the plate, which on a phone owns the bottom of the screen */
-    #artdl .btn > .face { padding: 9px 11px; }
+    /* The phone owns the bottom of the screen to the card, so nothing else may
+       be parked there: the download control is taken out of the plaster and put
+       in the card's own row of actions, where it stops landing on the picture's
+       frame. hud.js moves the node; this only lays it out in its new home. */
+    #cap .tools { justify-content: stretch; flex-wrap: wrap; margin-top: 16px; gap: 8px; }
+    /* a stretched button must stretch its face too: the frame is a 1px accent
+       edge painted by the outer box, so a face that keeps its intrinsic width
+       leaves the edge showing as a solid block beside the label. The face keeps
+       the desktop padding — a phone action shrunk to 38px is not a thumb target */
+    #cap .tools .btn > .face { flex: 1; justify-content: center; }
+    #cap .tools > #moreBtn { flex: 1 1 auto; }
+    #cap .tools > #artdl {
+      position: static; left: auto; top: auto; transform: none;
+      flex: 1 1 100%; z-index: auto;
+    }
+    #cap .tools > #artdl > .dl { display: block; }
+    #cap .tools #hueBtn { width: 100%; }
     #hue { width: min(280px, 78vw); }
     /* the dossier becomes a sheet that fills the phone, not a window floating on
        a wall — it is meant to be read, so it takes the whole page */
@@ -614,7 +633,6 @@
       <div class="n"><span class="out"></span></div>
       <div class="titlerow"><div class="logo"><img alt=""></div><h1></h1></div>
       <p></p>
-      <div class="skills" id="capSkills"></div>
       <div class="tools">
         <button type="button" class="btn" id="moreBtn"><span class="face">Show details <span class="arr">↗</span></span></button>
         <span id="capLinks"></span>
