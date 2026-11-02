@@ -55,6 +55,14 @@ window.WORKS = {
     "ev": "models: GuardResult, TestCase, AttackSurface"
    },
    {
+    "name": "AI engineering",
+    "icon": "spark",
+    "hue": 285,
+    "cat": "AI & Data · AI engineering",
+    "note": "Engineered with AI agents and human-reviewed: the crawler, the check suite and the retest harness were built in an agent session.",
+    "ev": "agent session 7866f1f2"
+   },
+   {
     "name": "Build, deps & Git",
     "icon": "deps",
     "hue": 242,
@@ -154,6 +162,14 @@ window.WORKS = {
   ],
   "tech": [
    {
+    "name": "AI engineering",
+    "icon": "spark",
+    "hue": 285,
+    "cat": "AI & Data · AI engineering",
+    "note": "A three-stage ML cascade — calibrated sentinel, vector classifier, rare-attack model — over 6.32M network flows, re-executed from the stored CSVs.",
+    "ev": "Cloud_Oriented_Intrusion_Detection_Modeling.ipynb, bench.md"
+   },
+   {
     "name": "Jupyter",
     "icon": "textscan",
     "hue": 285,
@@ -226,9 +242,8 @@ window.WORKS = {
   "kind": "Project",
   "org": "",
   "links": {
-   "site": "https://zenodo.org/records/23460013",
-   "repo": "https://github.com/LORDUSecurity/litmus-ai-text-detector",
-   "rg": "https://www.researchgate.net/publication/416249089_Free-Tier_LLM_Gateways_as_AI-Text_Detectors_A_Dated_Benchmark_of_Model_Accuracy_Quota_Regimes_Availability_Churn_and_Out-of-Sample_Stability"
+   "site": "https://ai-text-ranking-630tcvp9y1c.qoder.website",
+   "repo": "https://github.com/LORDUSecurity/litmus-ai-text-detector"
   },
   "sample": {
    "id": "1gBA6zsvmzqTs4Pvi_zoqSU6Kh1x2BZAU",
@@ -306,6 +321,14 @@ window.WORKS = {
     "cat": "Fullstack · Auth & access",
     "note": "Admin calibrates per-model thresholds and steers the endpoint lanes; a signed-in user's own key beats the admin's shared one and history stays owner-scoped — the packaged exe runs the same app in single-owner mode.",
     "ev": "backend/app.py, db.seed_admin"
+   },
+   {
+    "name": "AI engineering",
+    "icon": "spark",
+    "hue": 285,
+    "cat": "AI & Data · AI engineering",
+    "note": "The product is AI: 48 detectors ranked over a human/AI corpus with an offline engine, plus three committed n8n AI workflows. 4,025 model-run records back the benchmark.",
+    "ev": "benchmark/results-*.jsonl (4,025 records), ai-text-detector/n8n/*.json"
    },
    {
     "name": "Model evaluation",
@@ -487,6 +510,14 @@ window.WORKS = {
     "cat": "Fullstack · Databases",
     "note": "Django migrations across the catalogue apps; the ORM querysets sit on SQLite carrying the FTS5 index.",
     "ev": "kmprj */migrations, catalog/models.py, config/settings.py"
+   },
+   {
+    "name": "AI engineering",
+    "icon": "spark",
+    "hue": 285,
+    "cat": "AI & Data · AI engineering",
+    "note": "A four-tier RAG assistant answers from the course corpus — database first, FTS5 index second, a model last — built and published in its own agent session.",
+    "ev": "aichat/views.py; agent session 09f3c271"
    },
    {
     "name": "RAG & document retrieval",
@@ -713,6 +744,14 @@ window.WORKS = {
     "ev": "LoginController oldSession.invalidate(), SecurityFilter.java, error403.jsp"
    },
    {
+    "name": "AI engineering",
+    "icon": "spark",
+    "hue": 285,
+    "cat": "AI & Data · AI engineering",
+    "note": "Built and steered with AI agents, then human-reviewed — the heading-font defect was root-caused to an unshipped webfont and fixed in an agent session.",
+    "ev": "agent session 7866f1f2; commit 8551f2a"
+   },
+   {
     "name": "Build, deps & Git",
     "icon": "deps",
     "hue": 242,
@@ -819,6 +858,14 @@ window.WORKS = {
    ]
   ],
   "tech": [
+   {
+    "name": "AI engineering",
+    "icon": "spark",
+    "hue": 285,
+    "cat": "AI & Data · AI engineering",
+    "note": "An n8n-orchestrated pipeline fans nine parser services out over the config dumps and writes the provisioning workbook back.",
+    "ev": "n8n/, docker-compose.yml"
+   },
    {
     "name": "n8n",
     "icon": "scaffold",

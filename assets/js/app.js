@@ -691,6 +691,12 @@ function renderAbout() {
       <div class="about-prose">
         <p>What arrives at the other end of a hire — each of these has been built once, measured, and shipped:</p>
         <ul class="can-list">
+          <li><b>AI engineering — directing AI to build apps</b>
+            <span>Guiding AI agents to ship software and checking every output against the source: 10 logged
+              sessions, 14,798 tool calls, and a revision trail where agent errors were caught and corrected —
+              a reporter that rendered its own attack payload, a hallucinated class name. The build is directed
+              and reviewed, not accepted on faith.</span>
+            <i>GameVerse · FixProof · ESI Wiki · Pentest Agent · this portfolio</i></li>
           <li><b>Secured full-stack web apps</b>
             <span>Django + React, Angular + Flask, Java EE, Laravel, Express + MySQL — login with session
               regeneration, server-side validation, hardened uploads, injection and XSS closed in the code path.</span>
