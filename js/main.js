@@ -498,6 +498,8 @@ function buildOnePainting(e, mats) {
   const canvasMesh = M.buildPaintingMesh({ w: e.w, h: e.h, seed: e.seed }, paintMat);
   canvasMesh.position.z = 0.03;
   group.add(canvasMesh);
+  e._canvas = canvasMesh;
+  e._paintMat = paintMat;
   /* Behind the paint, in register with it: black, then the duplicate the break
      opens onto. The light that edges the break is its own additive quad at its
      own depth, so the frame's depth is none of the glitch layer's business. */
@@ -679,6 +681,128 @@ function applySize() {
   ScrollTrigger && ScrollTrigger.refresh();
 }
 
+/* ------------------------------------------------------------- the HQ copy
+
+   The download is struck off the plate, not cropped off the screen. The surface
+   is rebuilt from the loaded picture at the file's own resolution, the break is
+   held at its rest shape, and an orthographic lens square to the canvas takes
+   the artwork's four meshes alone — no frame, no fixture, no wall, no
+   perspective, and none of the room's vignette or grain. The renderer, the
+   composer and every texture are borrowed for that one frame and handed back
+   before the browser composites, so the walk never sees the resize. */
+
+const EXPORT_LAYER = 1;
+
+function setPalette(mats, pal) {
+  for (const m of mats) {
+    const u = m.uniforms;
+    if (u.uTint) u.uTint.value.fromArray(pal.tint);
+    if (u.uBleed) u.uBleed.value.fromArray(pal.bleed);
+    if (u.uRimA) u.uRimA.value.fromArray(pal.rimA);
+    if (u.uRimB) u.uRimB.value.fromArray(pal.rimB);
+  }
+}
+
+async function exportArtwork(e, hex) {
+  if (!e || !e.group || !e._canvas || !composer) return null;
+  /* the picture's own resolution is the ceiling worth having: a longer edge
+     than the source only interpolates, and a phone's fill budget is half a
+     desktop's */
+  const srcLong = e.img ? Math.max(e.img.naturalWidth, e.img.naturalHeight) : 1600;
+  const L = Math.round(Math.min(lowPerf ? 1600 : 2400, Math.max(1200, srcLong)));
+  const W = Math.round(e.w >= e.h ? L : L * e.w / e.h);
+  const H = Math.round(e.w >= e.h ? L * e.h / e.w : L);
+
+  const surf = e.img ? fitCanvasToImage(e.img, W, H)
+    : A.makePainting(e.kind, W, e.seed, { aspect: e.aspect });
+  if (e.img) toneWash(surf, 0.3);
+  A.bakePictureLight(surf, { x: 0.5, y: 0.08, radius: 1.0 });
+  const mat = e._paintMat.clone();
+  mat.map = M.canvasTexture(surf, { anisotropy: renderer.capabilities.getMaxAnisotropy() });
+  /* a clone carries none of the original's compiled hooks, so the cut has to be
+     patched in again or the copy would hang whole */
+  Glitch.patch(mat);
+
+  const meshes = [e._canvas, e._void, e._ghostMesh, e._fringeMesh].filter(Boolean);
+  const lights = [];
+  scene.traverse(o => { if (o.isLight) lights.push(o); });
+  const tinted = [e._ghost, e._fringe].filter(Boolean);
+  const keepCol = tinted.map(m => ({
+    tint: m.uniforms.uTint && m.uniforms.uTint.value.clone(),
+    bleed: m.uniforms.uBleed && m.uniforms.uBleed.value.clone(),
+    rimA: m.uniforms.uRimA && m.uniforms.uRimA.value.clone(),
+    rimB: m.uniforms.uRimB && m.uniforms.uRimB.value.clone()
+  }));
+  const keep = {
+    mat: e._canvas.material,
+    cam: composer.passes[0].camera,
+    vig: gradePass.material.uniforms.uVignette.value,
+    grain: gradePass.material.uniforms.uGrain.value
+  };
+
+  let restored = false;
+  const restore = () => {
+    if (restored) return;
+    restored = true;
+    composer.passes[0].camera = keep.cam;
+    gradePass.material.uniforms.uVignette.value = keep.vig;
+    gradePass.material.uniforms.uGrain.value = keep.grain;
+    e._canvas.material = keep.mat;
+    tinted.forEach((m, i) => {
+      const k = keepCol[i], u = m.uniforms;
+      if (k.tint) u.uTint.value.copy(k.tint);
+      if (k.bleed) u.uBleed.value.copy(k.bleed);
+      if (k.rimA) u.uRimA.value.copy(k.rimA);
+      if (k.rimB) u.uRimB.value.copy(k.rimB);
+    });
+    meshes.forEach(o => o.layers.disable(EXPORT_LAYER));
+    lights.forEach(o => o.layers.disable(EXPORT_LAYER));
+    mat.map.dispose();
+    mat.dispose();
+    applySize();
+  };
+
+  let blob = null;
+  try {
+    e._canvas.material = mat;
+    setPalette(tinted, Glitch.palette(hex));
+    Glitch.tick(0, true);
+    meshes.forEach(o => o.layers.enable(EXPORT_LAYER));
+    lights.forEach(o => o.layers.enable(EXPORT_LAYER));
+
+    const g = e.group;
+    g.updateWorldMatrix(true, false);
+    const centre = new THREE.Vector3().setFromMatrixPosition(g.matrixWorld);
+    const normal = new THREE.Vector3(0, 0, 1)
+      .applyQuaternion(g.getWorldQuaternion(new THREE.Quaternion()));
+    const cam = new THREE.OrthographicCamera(-e.w / 2, e.w / 2, e.h / 2, -e.h / 2, 0.1, 8);
+    cam.position.copy(centre).addScaledVector(normal, 3);
+    cam.lookAt(centre);
+    /* the break is measured in world space, so the copy has to be taken where
+       the picture hangs — moving it to a bench would move it out of its own tear */
+    cam.layers.set(EXPORT_LAYER);
+    cam.updateMatrixWorld(true);
+
+    composer.passes[0].camera = cam;
+    renderer.setPixelRatio(1);
+    renderer.setSize(W, H, false);
+    composer.setSize(W, H);
+    fxaa.material.uniforms.resolution.value.set(1 / W, 1 / H);
+    gradePass.material.uniforms.uScreenSize.value.set(W, H);
+    gradePass.material.uniforms.uVignette.value = 0;
+    gradePass.material.uniforms.uGrain.value = 0;
+    composer.render(0);
+    const struck = new Promise(r => renderer.domElement.toBlob(r, 'image/png'));
+    restore();
+    blob = await struck;
+  } catch (err) {
+    console.error('artwork export failed', err);
+  } finally {
+    restore();
+  }
+  return blob;
+}
+
 /* ----------------------------------------------------------------- scroll */
 
 function initScroll() {
@@ -854,9 +978,9 @@ function loop() {
   Glitch.tick(performance.now() * 0.001, stillFrames);
   if (mirror && frames % 2 === 1) renderMirrorPass();
   composer.render(dt);
-  /* an artwork copy is grabbed here and nowhere else: the drawing buffer is only
-     readable inside the frame that wrote it */
-  if (window.MuseumHud) window.MuseumHud.maybeCapture();
+  /* the download control rides under the picture itself, so it is placed from
+     the lens that just drew the frame */
+  if (window.MuseumHud) window.MuseumHud.placeArtDl();
   updateHud();
   frames++;
 
@@ -912,6 +1036,7 @@ boot().catch(err => {
 
 window.MuseumApp = {
   get state() { return { scrollP, rig, paintings, camera, scene, renderer, mirror }; },
+  exportArtwork,
   jumpTo(p) {
     scrollP = clamp(p, 0, 1);
     rig.smoothP = scrollP;
