@@ -246,7 +246,7 @@ function filtered(state) {
 
 /* ---------------------------------------------------------------- home --- */
 function renderHome(state) {
-  document.title = 'Portfolio — Works & Internships';
+  document.title = 'Mohamed Amine Chafik — LORDUSecurity · Portfolio';
   const list = filtered(state);
   const total = projects.length;
   const cats = D.categories;
@@ -442,7 +442,7 @@ function actionsMarkup(p) {
 function renderDetail(state) {
   const p = projById[state.id];
   if (!p) { location.replace('#/'); return; }
-  document.title = `${p.name} — Portfolio`;
+  document.title = `${p.name} — LORDUSecurity`;
   const idx = projects.indexOf(p);
   const nx = projects[(idx + 1) % projects.length];
   const prev = projects[(idx - 1 + projects.length) % projects.length];
@@ -547,7 +547,7 @@ const CERT_AREAS = [
 ];
 
 function renderCerts() {
-  document.title = 'Certifications — Portfolio';
+  document.title = 'Certifications — LORDUSecurity';
 
   app.innerHTML = `
   <section class="hero wrap">
@@ -648,7 +648,7 @@ const EDU = [
 ];
 
 function renderAbout() {
-  document.title = 'About — Portfolio';
+  document.title = 'About — LORDUSecurity';
 
   /* coursework skills: the shelf's own packages and tiles, but each one is
      claimed by the degree rather than by a linked work, so it stays here and
@@ -784,7 +784,7 @@ function bindShelfAnim(d) {
 
 /* --------------------------------------------------------------- contact --- */
 function renderContact() {
-  document.title = 'Contact — Portfolio';
+  document.title = 'Contact — LORDUSecurity';
 
   app.innerHTML = `
   <section class="hero wrap">
