@@ -84,15 +84,21 @@ body.fx-cursor .bg-cursor{opacity:1}
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-bottom:1px solid rgba(255,255,255,.055);
 }
-.brand{display:flex;align-items:center;gap:12px;min-width:0;justify-self:start}
-.brand-mark{width:30px;height:30px;flex:none;object-fit:contain;
-  filter:drop-shadow(0 0 8px rgba(255,255,255,.35))}
-.brand-word{font-size:13px;letter-spacing:.34em;font-weight:600;white-space:nowrap}
+.brand{display:flex;align-items:center;gap:13px;min-width:0;justify-self:start}
+.brand-mark{width:38px;height:38px;flex:none;object-fit:contain;
+  filter:drop-shadow(0 0 10px rgba(255,255,255,.4))}
+/* the wordmark is one word read in two weights: the handle carries the emphasis,
+   the suffix recedes so the pair still fits the bar without shrinking */
+.brand-word{display:flex;align-items:baseline;font-family:var(--display);font-size:15px;
+  line-height:1;letter-spacing:.22em;white-space:nowrap;text-transform:uppercase}
+.brand-word b{font-weight:700;color:var(--ink);letter-spacing:.2em}
+.brand-word i{font-style:normal;font-weight:300;color:var(--dimmer);letter-spacing:.24em}
 .top-nav{display:flex;align-items:center;gap:clamp(8px,2vw,26px);justify-self:center}
 .top-cta{display:flex;align-items:center;justify-self:end}
-.nav-link{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);padding:8px 2px;position:relative}
+.nav-link{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+  display:inline-flex;align-items:center;height:20px;position:relative}
 .nav-link:hover{color:var(--ink)}
-.nav-link::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .25s ease}
+.nav-link::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .25s ease}
 .nav-link:hover::after,.nav-link.on::after{transform:scaleX(1)}
 .nav-link.on{color:var(--ink)}
 .nav-abbr{display:none}
@@ -257,13 +263,11 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 
 .card-body{padding:18px 18px 20px;display:flex;flex-direction:column;gap:12px}
 .card-top{display:flex;align-items:center;gap:11px;min-width:0}
-.card-logo{width:26px;height:26px;flex:none;opacity:.9}
-.card-title{position:relative;padding-left:16px;font-family:var(--mono);font-size:19px;font-weight:500;
-  letter-spacing:.02em;text-transform:uppercase;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
-.card-title::before{content:"";position:absolute;left:0;top:calc(1.25em / 2 - 4px);width:8px;height:8px;
-  border:1px solid var(--accent);transform:rotate(45deg);opacity:.7;transition:background .25s ease,box-shadow .25s ease}
-.card:hover .card-title::before,.card:focus-visible .card-title::before{background:var(--accent);opacity:1;
-  box-shadow:0 0 12px rgba(255,255,255,.45)}
+.card-logo{width:30px;height:30px;flex:none;opacity:.95}
+.card-title{font-family:var(--mono);font-size:19px;font-weight:500;
+  letter-spacing:.02em;text-transform:uppercase;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);
+  transition:color .25s ease}
+.card:hover .card-title{color:var(--accent)}
 .card-desc{color:var(--dim);font-size:13.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
 .ctag{--cut:5px;display:inline-flex;background:color-mix(in srgb, var(--h) 30%, #1a1a1a);padding:1px;clip-path:var(--shape-4)}
@@ -563,7 +567,10 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
   .top{height:60px;padding-inline:14px}
   main{padding-top:60px}
   .filters{position:static}
-  .brand-word{font-size:11px;letter-spacing:.24em}
+  .brand-word{font-size:11px}
+  .brand-word b{letter-spacing:.18em}
+  .brand-word i{letter-spacing:.2em}
+  .brand-mark{width:30px;height:30px}
   .nav-link[data-nav="skills"]{display:none}
   .nav-link[data-nav="about"]{display:none}
   .foot-grid{grid-template-columns:minmax(0,1fr)}
