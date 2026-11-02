@@ -337,7 +337,7 @@ function renderHome(state) {
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>
           <input id="q" type="search" placeholder="Search" value="${esc(state.q || '')}" aria-label="Search works">
         </label>
-        <button type="button" class="chip${state.shelf ? ' on' : ''}" data-shelf style="--h:#f2f4f7" aria-expanded="${!!state.shelf}" aria-controls="shelf">
+        <button type="button" class="chip${state.shelf ? ' on' : ''}" data-shelf style="--h:#ffd23f" aria-expanded="${!!state.shelf}" aria-controls="shelf">
           <span class="face">All skills <span class="n">${D.skills.length}</span></span></button>
       </div>
       <div class="filters-row" style="margin-top:12px">
@@ -905,8 +905,10 @@ function render() {
   else if (state.view === 'contact') renderContact();
   else if (state.view === 'detail') renderDetail(state);
   else renderHome(state);
-  /* the header keeps the chrome white on every route; only the page shell below
-     takes the work's own hue */
+  /* the header museum button reads --accent outside the page shell:
+     ride it on the work's own hue while a detail page is open */
+  const dp = state.view === 'detail' && projById[state.id];
+  document.documentElement.style.setProperty('--accent', dp ? accent(dp) : '');
   document.body.classList.toggle('fx-cursor', !!state.shelf);
   if (pendingScroll != null) { window.scrollTo(0, pendingScroll); pendingScroll = null; }
   else window.scrollTo({top: 0, behavior: 'instant' in window ? 'instant' : 'auto'});
