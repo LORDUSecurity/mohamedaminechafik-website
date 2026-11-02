@@ -429,11 +429,12 @@ function actionsMarkup(p) {
   if (p.links && p.links.drive) out.push(`<a class="btn cut cut-4" href="${p.links.drive}" target="_blank" rel="noopener"><span class="face">Drive folder <span class="arr">↗</span></span></a>`);
   if (p.links && p.links.repo) out.push(`<a class="btn btn-ico cut cut-4" href="${p.links.repo}" target="_blank" rel="noopener" aria-label="Repository" title="Repository">
     <span class="face">${icon('brand:github')}</span></a>`);
-  if (p.links && p.links.site) {
-    if (p.links.site.includes('zenodo.org/records/')) out.push(`<a class="btn btn-ico cut cut-4" href="${p.links.site}" target="_blank" rel="noopener" aria-label="Zenodo" title="Zenodo record">
-      <span class="face"><img src="assets/logos/zenodo-ze.png" alt=""></span></a>`);
-    else out.push(`<a class="btn cut cut-4" href="${p.links.site}" target="_blank" rel="noopener"><span class="face">Live site <span class="arr">↗</span></span></a>`);
-  }
+  /* Zenodo is its own link, not a reading of `site`: the record and the running
+     app are two different things to hand over, and one field could only be one
+     of them — so whichever was written last silently deleted the other. */
+  if (p.links && p.links.zenodo) out.push(`<a class="btn btn-ico cut cut-4" href="${p.links.zenodo}" target="_blank" rel="noopener" aria-label="Zenodo" title="Zenodo record">
+    <span class="face"><img src="assets/logos/zenodo-ze.png" alt=""></span></a>`);
+  if (p.links && p.links.site) out.push(`<a class="btn cut cut-4" href="${p.links.site}" target="_blank" rel="noopener"><span class="face">Live site <span class="arr">↗</span></span></a>`);
   if (p.links && p.links.rg) out.push(`<a class="btn btn-ico cut cut-4" href="${p.links.rg}" target="_blank" rel="noopener" aria-label="ResearchGate" title="ResearchGate publication">
     <span class="face">${icon('brand:researchgate')}</span></a>`);
   return out.join('');
