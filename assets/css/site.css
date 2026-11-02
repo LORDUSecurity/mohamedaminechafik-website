@@ -95,8 +95,26 @@ body.fx-cursor .bg-cursor{opacity:1}
   line-height:1;letter-spacing:.22em;white-space:nowrap;text-transform:uppercase}
 .brand-word b{font-weight:700;color:var(--ink);letter-spacing:.2em}
 .brand-word i{font-style:normal;font-weight:300;color:var(--dimmer);letter-spacing:.24em}
+/* the S is the hinge between the two halves — it carries the handle's weight and
+   its colour, so the wordmark reads LORDUS first and SECURITY under it */
+.brand-word i b{font-weight:700;color:var(--ink)}
 .top-nav{display:flex;align-items:center;gap:clamp(8px,2vw,26px);justify-self:center}
 .top-cta{display:flex;align-items:center;justify-self:end}
+/* the drawer is a shape, not a second copy of the links: on a desktop the wrapper
+   disappears and its two children take the grid's centre and end columns; under
+   the phone breakpoint it becomes the panel they slide into */
+.drawer{display:contents}
+/* the handle is a plate in the button idiom — one pixel of frame, four corners
+   chamfered — and it turns into the close mark while the panel is out */
+.menu-btn{--edge:rgba(255,255,255,.16);width:42px;height:42px;justify-self:end;align-self:center;
+  display:none;place-items:center;padding:0;background:none;border:1px solid var(--edge);color:var(--ink);cursor:pointer;
+  clip-path:polygon(0 9px,9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px));
+  transition:border-color .2s ease,color .2s ease}
+.menu-btn svg{width:20px;height:20px;display:block}
+.menu-btn .ico-close{display:none}
+.menu-btn:hover,.menu-btn[aria-expanded=true]{--edge:var(--accent);color:var(--accent)}
+.menu-btn[aria-expanded=true] .ico-menu{display:none}
+.menu-btn[aria-expanded=true] .ico-close{display:block}
 .nav-link{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
   display:inline-flex;align-items:center;height:20px;position:relative}
 .nav-link:hover{color:var(--ink)}
@@ -597,21 +615,39 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
   .cert-top{grid-template-columns:1fr}
 }
 @media (max-width:720px){
-  .top{height:60px;padding-inline:14px}
+  /* the bar keeps only the mark and the handle; the links live in the panel */
+  .top{height:60px;padding-inline:14px;grid-template-columns:auto 1fr}
   main{padding-top:60px}
   .filters{position:static}
-  .brand-word{font-size:11px}
-  .brand-word b{letter-spacing:.18em}
-  .brand-word i{letter-spacing:.2em}
+  .brand-word{display:none}
   .brand-mark{width:30px;height:30px}
-  .nav-link[data-nav="skills"]{display:none}
-  .nav-link[data-nav="about"]{display:none}
+  .menu-btn{display:inline-flex}
+  .drawer{position:absolute;top:100%;right:0;z-index:2;display:grid;
+    grid-template-rows:minmax(0,1fr) auto;
+    width:min(80vw,320px);height:calc(100dvh - 60px);visibility:hidden;
+    background:rgba(8,10,14,.97);border-left:1px solid rgba(255,255,255,.07);
+    box-shadow:-24px 0 60px rgba(6,7,10,.6);
+    transform:translateX(103%);transition:transform .34s cubic-bezier(.2,.7,.2,1),visibility .34s}
+  .top.nav-open .drawer{visibility:visible;transform:none}
+  .top-nav{display:grid;gap:1px;background:rgba(255,255,255,.06);align-self:start;justify-self:stretch}
+  .nav-link{height:auto;padding:16px 18px;font-size:12px;letter-spacing:.2em}
+  .nav-link::after{display:none}
+  .nav-link.on{color:var(--ink);box-shadow:inset 2px 0 0 var(--accent)}
+  .nav-full{display:inline}
+  .nav-abbr{display:none}
+  /* the links read from the top, so the one action lives at the bottom of the
+     sheet — the far end of the thumb's travel, away from the last nav row */
+  .top-cta{padding:18px;align-self:end;justify-self:stretch}
+  .btn-museum{width:100%;justify-content:center}
+  /* the plate is the 1px frame's inner face — it has to grow with the button or
+     the amber frame floods the bar instead of outlining it */
+  .btn-museum>.face{flex:1;justify-content:center}
+  /* the dark behind the panel, which is also what you tap to put it away */
+  .top.nav-open::after{content:'';position:absolute;top:100%;left:0;right:0;z-index:1;
+    height:calc(100dvh - 60px);background:rgba(6,7,10,.62);pointer-events:auto}
   .foot-grid{grid-template-columns:minmax(0,1fr)}
   .edu-row{grid-template-columns:minmax(0,1fr);gap:4px}
   .socials-grid{grid-template-columns:minmax(0,1fr)}
-  .top-nav{gap:12px}
-  .nav-full{display:none}
-  .nav-abbr{display:inline}
   .cert-meta{grid-template-columns:1fr}
   .cert-wm{bottom:-30px}
   .grid{grid-template-columns:1fr;gap:18px}
@@ -631,27 +667,10 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
   .tip{display:none}
 }
 @media (max-width:480px){
-  /* five nav items plus the wordmark no longer fit — the mark carries the brand,
-     which frees enough width to bring Skills and About back. The centre column
-     takes the slack here, so the links sit evenly between the mark and the
-     museum button rather than being pulled to one side by the button's width. */
-  .brand-word{display:none}
-  .nav-link[data-nav="skills"],.nav-link[data-nav="about"]{display:inline}
-  .top{gap:10px;padding-inline:12px;grid-template-columns:auto 1fr auto}
-  .top-nav{gap:7px}
-  .nav-link{font-size:10px;letter-spacing:.12em}
-  .btn-museum>.face{padding:10px 12px;gap:6px}
-  .btn-museum .arr{display:none}
-}
-@media (max-width:430px){
-  /* the last 50px: the five links only share a row with the mark and the museum
-     button once the tracking tightens — the labels stay whole, nothing wraps */
-  .top-nav{gap:5px}
-  .nav-link{font-size:9.5px;letter-spacing:.06em}
-}
-@media (max-width:360px){
-  /* even at 10px the five links and the museum button do not share 320px */
-  .nav-link[data-nav="skills"],.nav-link[data-nav="about"]{display:none}
+  /* the panel is nearly the whole screen here, so it stops pretending to be a
+     column and takes the room: the bar keeps its gutter, the sheet keeps its edge */
+  .top{padding-inline:12px}
+  .drawer{width:min(88vw,340px)}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
