@@ -674,16 +674,21 @@ function renderAbout() {
   /* the quote walked as a thread: the two lines that are his sit on the sender's
      side, the heckler's line opposite. A real chat says when each line landed and
      whether it was read, so each bubble carries its time and the sender's carry
-     the ticks — the first read (the reply proves it), the last still waiting. */
+     the ticks — the first read (the reply proves it), the last still waiting. The
+     paint is clipped in an inner box so the tail can leave the corner. */
   const tick = '<svg class="tk" viewBox="0 0 18 12" fill="none" stroke="currentColor" ' +
     'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M1.2 6.4 4 9.2 10.6 2.2"/><path d="M7.8 6.4 10.6 9.2 17.2 2.2"/></svg>';
+  const bub = (side, cls, text, stamp, seen) =>
+    `<p class="bub ${side} ${cls}"><span class="body">${text}` +
+    (stamp ? `<span class="mt${seen ? ' seen' : ''}"><time>${stamp}</time>${side === 'me' ? tick : ''}</span>` : '') +
+    `</span></p>`;
   const convo = `
     <section class="jack-sec">
       <div class="jack" aria-label="Jack of all trades">
-        <p class="bub me b1">Jack of all trades,<span class="mt seen"><time>09:41</time>${tick}</span></p>
-        <p class="bub them b2">master of none,<span class="mt"><time>09:41</time></span></p>
-        <p class="bub me b3">but oftentimes better than a master of one.<span class="mt"><time>09:43</time>${tick}</span></p>
+        ${bub('me', 'b1', 'Jack of all trades,', '09:41', true)}
+        ${bub('them', 'b2', 'master of none,', '09:41')}
+        ${bub('me', 'b3', 'but oftentimes better than a master of one.', '09:43')}
       </div>
     </section>`;
 
