@@ -281,7 +281,7 @@ function renderHome(state) {
       const c = catById[id];
       return `<button type="button" class="ctag" data-cat="${id}" style="--h:${catColor(c)}" aria-label="Filter by ${esc(c.name)}"><span>${esc(c.name)}</span></button>`;
     }).join('');
-    return `<article class="card" role="link" tabindex="0" data-href="#/p/${p.id}" style="--accent:${accent(p)};--shape:${chamfer(p.cuts)}" aria-label="${esc(p.name)}">
+    return `<article class="card" role="link" tabindex="0" data-href="#/p/${p.id}" style="--shape:${chamfer(p.cuts)}" aria-label="${esc(p.name)}">
       <div class="face">
         <div class="card-media">
           <img src="${img(p, p.hero)}" alt="${esc(p.name)} interface" loading="${i < 4 ? 'eager' : 'lazy'}" decoding="async">
@@ -337,7 +337,7 @@ function renderHome(state) {
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>
           <input id="q" type="search" placeholder="Search" value="${esc(state.q || '')}" aria-label="Search works">
         </label>
-        <button type="button" class="chip${state.shelf ? ' on' : ''}" data-shelf style="--h:#ffd23f" aria-expanded="${!!state.shelf}" aria-controls="shelf">
+        <button type="button" class="chip${state.shelf ? ' on' : ''}" data-shelf style="--h:#f2f4f7" aria-expanded="${!!state.shelf}" aria-controls="shelf">
           <span class="face">All skills <span class="n">${D.skills.length}</span></span></button>
       </div>
       <div class="filters-row" style="margin-top:12px">
@@ -742,6 +742,14 @@ function renderAbout() {
     </div>
 
     <section class="d-section">
+      <div class="jack" aria-label="Jack of all trades">
+        <p class="bub b1">Jack of all trades,</p>
+        <p class="bub b2">master of none,</p>
+        <p class="bub b3">but oftentimes better than a master of one.</p>
+      </div>
+    </section>
+
+    <section class="d-section">
       <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Education</h2><span class="sec-line"></span></div>
       <div class="edu">
         ${EDU.map(([w, what, when, course], i) => `<div class="edu-row"><b>${w}</b><span>${what}${course ? `<em class="edu-course">${course}</em>` : ''}</span><i>${when}</i></div>${i === 0 ? cwBlock : ''}`).join('')}
@@ -897,14 +905,31 @@ function render() {
   else if (state.view === 'contact') renderContact();
   else if (state.view === 'detail') renderDetail(state);
   else renderHome(state);
-  /* the header museum button reads --accent outside the page shell:
-     ride it on the work's own hue while a detail page is open */
-  const dp = state.view === 'detail' && projById[state.id];
-  document.documentElement.style.setProperty('--accent', dp ? accent(dp) : '');
+  /* the header keeps the chrome white on every route; only the page shell below
+     takes the work's own hue */
+  document.body.classList.toggle('fx-cursor', !!state.shelf);
   if (pendingScroll != null) { window.scrollTo(0, pendingScroll); pendingScroll = null; }
   else window.scrollTo({top: 0, behavior: 'instant' in window ? 'instant' : 'auto'});
 }
 renderFooter();
 window.addEventListener('hashchange', render);
+
+/* pointer-tracked backdrop, live only on the Skills route (body.fx-cursor):
+   the light follows the cursor and the grid drifts a few pixels against it */
+const bgCursor = document.getElementById('bgCursor');
+const bgGrid = document.querySelector('.bg-grid');
+let px = innerWidth / 2, py = innerHeight * .3, raf = 0;
+addEventListener('pointermove', e => {
+  px = e.clientX; py = e.clientY;
+  if (!raf) raf = requestAnimationFrame(() => {
+    raf = 0;
+    if (!document.body.classList.contains('fx-cursor')) return;
+    bgCursor.style.setProperty('--mx', px + 'px');
+    bgCursor.style.setProperty('--my', py + 'px');
+    bgGrid.style.setProperty('--gx', ((px / innerWidth) - .5) + '');
+    bgGrid.style.setProperty('--gy', ((py / innerHeight) - .5) + '');
+  });
+}, {passive: true});
+
 render();
 })();
