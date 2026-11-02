@@ -25,6 +25,9 @@
     --dim: #8d939d;
     --dimmer: #737a85;
     --accent: #ffd23f;
+    /* the one red the walk never spends on a work, so the door reads as a way
+       out rather than as another exhibit */
+    --exit: #ff3b3b;
     --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
     --display: "Chakra Petch", Bahnschrift, "Segoe UI Variable Display", sans-serif;
   }
@@ -348,10 +351,35 @@
     color:color-mix(in srgb, var(--accent) 82%, white 18%);
     box-shadow:0 0 12px color-mix(in srgb, var(--accent) 22%, transparent)}
 
-  /* the door, top right: leave the gallery for the portfolio */
-  #door{top:clamp(12px,2.4vh,22px);right:clamp(14px,3vw,34px);z-index:7;opacity:0;
+  /* the door, bottom left — the corner the walk leaves empty, and the mirror of
+     the progress read-out. It rests as a red hairline over smoky glass, and only
+     lights when the pointer is on it: an exit must not compete with the
+     paintings until someone reaches for it.
+     The house button paints --edge across the whole box and lets the face cover
+     it, so a transparent face would show the frame as a solid slab. The door
+     keeps its own translucent glass in every state and lets the glow do the
+     lighting — the red rises from 0 to 34% inside the glass, never to opaque. */
+  #door{left:clamp(18px,3.2vw,44px);bottom:clamp(24px,4vh,48px);z-index:7;opacity:0;
     transition:opacity .7s ease}
   #door.on{opacity:1}
+  #door .btn{--edge:color-mix(in srgb, var(--exit) 44%, transparent)}
+  #door .btn>.face{background:color-mix(in srgb, var(--bg) 58%, transparent);
+    min-height:calc(13px * 1.55 + 24px);
+    color:color-mix(in srgb, var(--exit) 74%, white 26%)}
+  #door .btn:hover{--edge:var(--exit);
+    filter:drop-shadow(0 0 4px color-mix(in srgb, var(--exit) 95%, transparent))
+           drop-shadow(0 0 14px color-mix(in srgb, var(--exit) 85%, transparent))
+           drop-shadow(0 0 40px color-mix(in srgb, var(--exit) 50%, transparent))}
+  #door .btn:hover>.face{background:color-mix(in srgb, var(--exit) 20%, rgba(6,7,10,.58));color:#fff;
+    text-shadow:0 0 10px color-mix(in srgb, var(--exit) 90%, transparent)}
+  #door .btn:hover svg{filter:drop-shadow(0 0 7px var(--exit))}
+  /* pressed: the glass takes more of the red and the halo doubles, so the click
+     reads as the door opening rather than as a hover that never resolved */
+  #door .btn:active{--edge:var(--exit);transform:translateY(1px);
+    filter:drop-shadow(0 0 8px color-mix(in srgb, var(--exit) 100%, transparent))
+           drop-shadow(0 0 30px color-mix(in srgb, var(--exit) 90%, transparent))
+           drop-shadow(0 0 72px color-mix(in srgb, var(--exit) 55%, transparent))}
+  #door .btn:active>.face{background:color-mix(in srgb, var(--exit) 34%, rgba(6,7,10,.58))}
 
   /* the card carries its own controls: the buttons that act on it — the plate is
      one object on the wall, not a card with things glued to the plaster
@@ -565,8 +593,10 @@
     #cap .n { margin-bottom: 14px; }
     #cap .t { display: none; }
     #prog { display: none; }
-    /* the door moves clear of the notch, and the welcome stack tightens */
-    #door { top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); }
+    /* the phone gives its bottom edge to the card, so the door keeps the same
+       corner only where the corner is free — here it moves to the top left */
+    #door { left: calc(12px + env(safe-area-inset-left)); right: auto;
+      top: calc(12px + env(safe-area-inset-top)); bottom: auto; }
     #title { padding: 0 18px; }
     #title .hint { margin-top: 30px; }
     #end .cta { margin-top: 24px; gap: 8px; }
