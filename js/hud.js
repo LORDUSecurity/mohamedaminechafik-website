@@ -27,7 +27,7 @@ function icon(name) {
 
 const $ = sel => document.querySelector(sel);
 const el = {};
-['door', 'ctaEnd', 'cap', 'capLinks', 'moreBtn', 'artdl', 'hueBtn', 'hue', 'detail',
+['door', 'ctaEnd', 'cap', 'capLinks', 'capSkills', 'moreBtn', 'artdl', 'hueBtn', 'hue', 'detail',
  'tip', 'tipCat', 'tipName', 'tipNote', 'tipEv', 'tipEvRow'].forEach(id => {
   el[id] = document.getElementById(id);
 });
@@ -69,12 +69,14 @@ function buildChrome() {
     btn('mailto:' + CONTACT.email_esi, '', icon('mail'), 'btn-ico')
   ].forEach(b => el.ctaEnd.appendChild(b));
 
-  /* the plate's download and the dossier's close are set in the markup, but the
-     marks themselves come from the portfolio's shared set like every other button */
-  [['#hueBtn .face', 'download'], ['#dClose .face', 'close']].forEach(pair => {
-    const face = $(pair[0]);
-    if (face) face.innerHTML = icon(pair[1]);
-  });
+  /* the marks come from the portfolio's shared set like every other button. The
+     download is the one control a visitor has to find on their own under a
+     painting, so it carries its name as well as its glyph — an anonymous arrow
+     reads as part of the frame, not as the thing that gives you a copy. */
+  const dl = $('#hueBtn .face');
+  if (dl) dl.innerHTML = icon('download') + '<span>Download artwork</span><span class="arr">&darr;</span>';
+  const close = $('#dClose .face');
+  if (close) close.innerHTML = icon('close');
 }
 
 /* ---------------------------------------------------------- exhibit card */
@@ -90,9 +92,26 @@ function onFocus(e) {
   el.cap.querySelector('.out').textContent = d ? d.output : '';
   el.moreBtn.disabled = !d;
   buildHueMenu(w);
+  buildCapSkills(d);
   buildCapLinks(d);
   measure();
 }
+
+/* What the work is built from, on the face of the card, in the portfolio's
+   chip shape: enough to say what you are looking at without opening anything,
+   and short enough that the plate stays a card rather than a second dossier.
+   Tapping one opens the dossier, where the chip carries its full note. */
+function buildCapSkills(d) {
+  const t = ((d && d.tech) || []).slice(0, 4);
+  el.capSkills.innerHTML = t.map(x =>
+    '<button type="button" class="tag" style="--h:hsl(' + x.hue + ' 92% 62%)" ' +
+    'aria-label="' + esc(x.name) + ' — open the details"><span class="face">' +
+    icon(x.icon) + '<span>' + esc(x.name) + '</span></span></button>').join('');
+}
+
+el.capSkills && el.capSkills.addEventListener('click', ev => {
+  if (ev.target.closest('.tag')) openDetail();
+});
 
 /* beside the dossier button, the work's own two channels as logo-only marks —
    the same small buttons the portfolio's detail page carries */
@@ -106,33 +125,52 @@ function buildCapLinks(d) {
   ].join('');
 }
 
-/* The corruption colours a copy can be struck in. The work's own hue first —
-   that is what hangs on the wall — then the five the room's palette can be
-   pushed to without leaving its own logic. */
+/* The colours a copy can be downloaded in. The work's own hue first — that is
+   what hangs on the wall — then the five the room's palette can be pushed to
+   without leaving its own logic. */
 const HUES = [
-  ['This hang', null],
+  ['As it hangs', null],
   ['Cyan', 0x39e5ff],
   ['Magenta', 0xff3d6e],
   ['Lime', 0x6dff13],
   ['Amber', 0xffd23f],
-  ['Colourless', 0xf2ede0]
+  ['No colour', 0xf2ede0]
 ];
 
 function buildHueMenu(w) {
   if (!el.hue) return;
   const own = w ? w.accent : 0xffd23f;
-  el.hue.innerHTML = '<div class="lab">Strike a copy in</div>' + HUES.map(([name, hex]) => {
+  const inner = '<div class="lab">Download a copy in</div>' + HUES.map(([name, hex]) => {
     const c = hex === null ? own : hex;
     const css = '#' + c.toString(16).padStart(6, '0');
     return '<button type="button" role="menuitem" data-hue="' + c.toString(16) +
       '" style="--hc:' + css + '"><i></i>' + esc(name) + '</button>';
   }).join('');
+  el.hue.innerHTML = '<div class="box">' + inner + '</div>';
 }
 
 el.hueBtn && el.hueBtn.addEventListener('click', () => {
   const shown = el.hue.classList.toggle('on');
   el.hueBtn.setAttribute('aria-expanded', shown ? 'true' : 'false');
+  if (shown) seatHue();
 });
+
+/* the menu is the one part of the room that has to fit in what is left of the
+   screen: measured where it wants to sit, and sent above the button — over the
+   frame, for as long as it is asked for — when below it would be cut off or
+   land on the card the visitor was just reading. If neither side has room the
+   menu keeps its place under the button rather than running off the top. */
+function seatHue() {
+  if (!el.hue || !el.hue.classList.contains('on')) return;
+  el.hue.classList.remove('up');
+  const r = el.hue.getBoundingClientRect();
+  const sheet = el.cap.querySelector('.sheet').getBoundingClientRect();
+  const onCard = r.right > sheet.left + 1 && r.left < sheet.right - 1 && r.bottom > sheet.top + 1;
+  if (r.bottom > window.innerHeight - 8 || onCard) {
+    el.hue.classList.add('up');
+    if (el.hue.getBoundingClientRect().top < 8) el.hue.classList.remove('up');
+  }
+}
 
 el.hue && el.hue.addEventListener('click', ev => {
   const b = ev.target.closest('[data-hue]');
@@ -162,6 +200,7 @@ document.addEventListener('click', ev => {
    own resolution — this only asks for it and hands over the blob. */
 
 let dlW = 44, dlH = 44, capTop = Infinity, narrow = false;
+let seatedY = -1;
 
 function measure() {
   if (!el.artdl) return;
@@ -217,6 +256,9 @@ function placeArtDl() {
   a.style.left = Math.round(x) + 'px';
   a.style.top = Math.round(y) + 'px';
   a.classList.add('on');
+  /* the open menu is re-seated only when the control actually moves: its box is
+     read once per step, not on every frame of the walk */
+  if (el.hue.classList.contains('on') && y !== seatedY) { seatedY = y; seatHue(); }
 }
 
 let striking = false;

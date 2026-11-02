@@ -188,13 +188,13 @@
   #cap.on .n         { transition-delay: 120ms; }
   #cap.on .titlerow  { transition-delay: 210ms; }
   #cap.on p          { transition-delay: 300ms; }
-  /* The controls under the card belong to the stop, not to the room: they arrive
-     with the plate and are inert while it is away, or a visitor would be clicking
-     a download button floating over bare plaster between two pictures. */
-  #cap .under { opacity: 0; transition: opacity 420ms ease 380ms; }
-  #cap.on .under { opacity: 1; }
-  #cap .tools { pointer-events: none; }
-  #cap.on .tools { pointer-events: auto; }
+  #cap.on .skills    { transition-delay: 390ms; }
+  #cap.on .tools     { transition-delay: 480ms; }
+  /* The controls belong to the stop, not to the room: they arrive with the plate
+     and are inert while it is away, or a visitor would be clicking a button that
+     hangs over bare plaster between two pictures. */
+  #cap .tools, #cap .skills { pointer-events: none; }
+  #cap.on .tools, #cap.on .skills { pointer-events: auto; }
   #cap .t { opacity: 0; transition: opacity 420ms ease 380ms; }
   #cap.on .t { opacity: 1; }
   /* reduced motion keeps the fade — the text still has to arrive in order —
@@ -353,10 +353,12 @@
     transition:opacity .7s ease}
   #door.on{opacity:1}
 
-  /* the row of controls under the plate */
-  #cap .under{width:100%;display:flex;flex-direction:column;gap:12px;align-items:flex-start;margin-top:2px}
-  #cap.right .under{align-items:flex-end}
-  #cap .tools{display:flex;gap:9px;align-items:stretch;flex-wrap:wrap}
+  /* the card carries its own controls: the work's skills, then the buttons that
+     act on it — the plate is one object on the wall, not a card with things
+     glued to the plaster underneath */
+  #cap .skills{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px}
+  #cap .skills:empty{display:none}
+  #cap .tools{display:flex;gap:9px;align-items:stretch;flex-wrap:wrap;margin-top:22px}
   #cap .tools .btn{--edge:color-mix(in srgb, var(--accent) 40%, var(--line-2))}
   #cap .tools .btn[disabled]{opacity:.34;pointer-events:none}
   /* the work's own channels, small beside the dossier button: the same logo-only
@@ -378,19 +380,30 @@
   #artdl.busy .dl{pointer-events:none}
   #artdl.busy .btn{animation:strike 1.1s ease-in-out infinite}
   @keyframes strike{0%,100%{opacity:.4}50%{opacity:.95}}
+  /* the menu is framed the way everything else in the room is: an accent-tinted
+     edge, one pixel of it showing, and the panel chamfered inside — the
+     portfolio's card idiom, not a bare bordered box floating on the canvas. */
   #hue{position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);display:none;
-    grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px;width:236px;
-    background:var(--panel);border:1px solid var(--line-2);pointer-events:auto;
-    box-shadow:0 18px 44px rgba(0,0,0,.55)}
-  #hue.on{display:grid}
+    width:268px;padding:1px;pointer-events:auto;
+    background:color-mix(in srgb, var(--accent) 34%, var(--line-2));
+    clip-path:polygon(0 12px,12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px));
+    filter:drop-shadow(0 18px 40px rgba(0,0,0,.6))}
+  #hue.on{display:block}
+  /* a control under a painting near the bottom of the room has no room to open
+     into, and a menu with its last row off-screen is not a menu: it flips above
+     the button, over the frame, for as long as it is asked for */
+  #hue.up{top:auto;bottom:calc(100% + 9px)}
+  #hue .box{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px;
+    background:var(--panel);
+    clip-path:polygon(0 11px,11px 0,calc(100% - 11px) 0,100% 11px,100% calc(100% - 11px),calc(100% - 11px) 100%,11px 100%,0 calc(100% - 11px))}
   #hue .lab{grid-column:1/-1;font-family:var(--mono);font-size:9px;letter-spacing:.2em;
     text-transform:uppercase;color:var(--dimmer)}
-  #hue button{display:flex;align-items:center;gap:9px;padding:6px 8px;cursor:pointer;
+  #hue button{display:flex;align-items:center;gap:9px;padding:7px 9px;cursor:pointer;
     background:var(--panel-2);border:1px solid var(--line);
-    font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
     transition:border-color .18s ease,color .18s ease}
   #hue button:hover,#hue button:focus-visible{border-color:var(--hc);color:var(--ink);outline:none}
-  #hue i{width:11px;height:11px;flex:none;background:var(--hc);
+  #hue i{width:12px;height:12px;flex:none;background:var(--hc);
     box-shadow:0 0 9px color-mix(in srgb, var(--hc) 70%, transparent)}
 
   /* ======================================================== detail card ==== */
@@ -544,7 +557,7 @@
     #cap .sheet { padding: clamp(22px, 5.6vw, 30px) clamp(20px, 5.2vw, 26px) clamp(18px, 4.6vw, 24px); }
     #cap p { max-width: 46ch; font-size: 13px; }
     #cap .t { display: none; }
-    #cap .under { align-items: stretch; }
+    #cap .skills { margin-top: 16px; }
     #cap .tools { justify-content: flex-start; flex-wrap: wrap; }
     #prog { display: none; }
     /* the door moves clear of the notch, and the welcome stack tightens */
@@ -601,25 +614,24 @@
       <div class="n"><span class="out"></span></div>
       <div class="titlerow"><div class="logo"><img alt=""></div><h1></h1></div>
       <p></p>
-    </div></div><i class="neon"></i></div>
-    <div class="under">
+      <div class="skills" id="capSkills"></div>
       <div class="tools">
         <button type="button" class="btn" id="moreBtn"><span class="face">Show details <span class="arr">↗</span></span></button>
         <span id="capLinks"></span>
       </div>
-      <div class="t"></div>
-    </div>
+    </div></div><i class="neon"></i></div>
+    <div class="t"></div>
   </div>
 
   <!-- the copy is struck under the canvas itself, so it is seated by the lens
        each frame rather than parked in the plate's own column -->
   <div id="artdl" class="hud">
     <span class="dl">
-      <button type="button" class="btn btn-ico" id="hueBtn" aria-haspopup="true" aria-expanded="false"
-              aria-label="Download a high-resolution copy of this artwork" title="Download a high-resolution copy of this artwork">
+      <button type="button" class="btn" id="hueBtn" aria-haspopup="true" aria-expanded="false"
+              title="Download a high-resolution copy of this artwork">
         <span class="face"></span>
       </button>
-      <div id="hue" role="menu" aria-label="Choose a corruption colour"></div>
+      <div id="hue" role="menu" aria-label="Choose a colour for the copy"></div>
     </span>
   </div>
 
