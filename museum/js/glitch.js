@@ -873,11 +873,19 @@ function fringeMesh(e, z) {
   return mesh;
 }
 
-/** Everything the break needs, hung on one picture's group. */
+/** Everything the break needs, hung on one picture's group. The four meshes are
+    also left on the entry: the high-resolution copy is struck from these alone,
+    with the frame, the fixture and the room kept out of it. */
 function build(group, e, srcCanvas, opts) {
-  group.add(voidMesh(e, (opts && opts.voidZ) || -0.5));
-  if (srcCanvas) group.add(bitmapMesh(srcCanvas, e));
+  e._void = voidMesh(e, (opts && opts.voidZ) || -0.5);
+  group.add(e._void);
+  e._ghostMesh = null;
+  if (srcCanvas) {
+    e._ghostMesh = bitmapMesh(srcCanvas, e);
+    group.add(e._ghostMesh);
+  }
   e._fringe = null;
+  e._fringeMesh = null;
   if (NEON) {
     /* one hair in front of the duplicate, so the light sits on the lips of the
        break instead of being buried behind the plate it is tracing */
@@ -886,6 +894,7 @@ function build(group, e, srcCanvas, opts) {
     /* the light has to know which break it is tracing, or a re-rolled silhouette
        would leave it drawing the edge of a shape that no longer exists */
     e._fringe = f.material;
+    e._fringeMesh = f;
   }
 }
 

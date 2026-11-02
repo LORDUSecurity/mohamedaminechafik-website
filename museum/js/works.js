@@ -2,6 +2,7 @@
 window.WORKS = {
  "FixProof": {
   "output": "CLI tool",
+  "desc": "A localhost-only scanner and retest tool: it crawls a running app, maps its attack surface, runs passive header, cookie and CSRF checks plus active XSS and SQLi probes, then re-runs the same cases after the patch to prove the fix landed. 51 pytest checks pass in 8.27 s, 31 % line coverage placed where a wrong answer is invisible at runtime — surface_mapper at 99 %. Every request stays on 127.0.0.1.",
   "year": "2026",
   "kind": "Project",
   "org": "",
@@ -43,10 +44,69 @@ window.WORKS = {
     "127.0.0.1",
     "nothing leaves"
    ]
+  ],
+  "tech": [
+   {
+    "name": "Validation & upload handling",
+    "icon": "validate",
+    "hue": 196,
+    "cat": "Fullstack · Backend",
+    "note": "Pydantic models so a verdict cannot arrive as a loose dict.",
+    "ev": "models: GuardResult, TestCase, AttackSurface"
+   },
+   {
+    "name": "Build, deps & Git",
+    "icon": "deps",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "pyproject pinning typer, rich, requests, bs4, lxml, playwright, pydantic, pytest.",
+    "ev": "pyproject.toml"
+   },
+   {
+    "name": "Penetration testing",
+    "icon": "replay",
+    "hue": 2,
+    "cat": "Security · Offensive testing",
+    "note": "The crawl builds the attack-surface map first; the same payload is replayed pre- and post-patch to show the delta.",
+    "ev": "browser_crawler.py, surface_mapper, checks/xss.py"
+   },
+   {
+    "name": "Vulnerability testing",
+    "icon": "evidence",
+    "hue": 2,
+    "cat": "Security · Offensive testing",
+    "note": "Injection and XSS checks replayed before and after the patch; the XSS verdict is three-state — reflected, unescaped, then confirmed by an alert dialog in headless Chromium.",
+    "ev": "checks/xss.py dialog catcher, tests covering sqli"
+   },
+   {
+    "name": "Hardening & guardrails",
+    "icon": "guard",
+    "hue": 2,
+    "cat": "Security · Hardening",
+    "note": "Loopback allowlist resolves the hostname and refuses any other IP, asserted in every check.",
+    "ev": "guard.py, asserted in every check"
+   },
+   {
+    "name": "Python",
+    "icon": "brand:python",
+    "hue": 325,
+    "cat": "Languages · Backend",
+    "note": "The whole tool: typer commands, rich tables, requests sessions, pydantic verdicts.",
+    "ev": "pyproject.toml, guard.py, checks/*.py"
+   },
+   {
+    "name": "Automated & browser testing",
+    "icon": "test",
+    "hue": 48,
+    "cat": "Quality & Docs · Testing",
+    "note": "51 pytest checks across guard, xss, sqli, surface mapper, session store and retest — payloads replayed in headless Chromium with a dialog catcher.",
+    "ev": "tests/, browser_crawler.py, checks/xss.py"
+   }
   ]
  },
  "CSE-CIC-IDS2018": {
   "output": "Notebook",
+  "desc": "A three-stage machine-learning cascade over the 6,320,003 network-flow records of the CIC-IDS2018 AWS export: a calibrated sentinel that decides benign or attack, a classifier that names the vector, and a rare-attack model that works where SMOTE stops helping. Every number here was re-executed from the stored 5.0 GB of CSVs rather than read off the notebook — stage B reaches 0.99986 over 1,325,843 attack rows, and the hard test still calls 169 of 176 Infilteration flows benign, which is the finding an accuracy of 0.9821 hides.",
   "year": "2026",
   "kind": "Project",
   "org": "",
@@ -91,10 +151,77 @@ window.WORKS = {
     "3",
     "model stages"
    ]
+  ],
+  "tech": [
+   {
+    "name": "Jupyter",
+    "icon": "textscan",
+    "hue": 285,
+    "cat": "AI & Data · Machine learning",
+    "note": "The whole three-stage cascade runs as a notebook, re-executed from the stored 5.0 GB of CSVs.",
+    "ev": "Cloud_Oriented_Intrusion_Detection_Modeling.ipynb"
+   },
+   {
+    "name": "Machine learning",
+    "icon": "trees",
+    "hue": 285,
+    "cat": "AI & Data · Machine learning",
+    "note": "XGBoost for both stages, variance and mutual-information feature selection, DBSCAN / KMeans / GMM compared on silhouette, ARI and NMI, class weights instead of SMOTE; RAPIDS GPU variants (cuml, cupy) re-run the stages.",
+    "ev": "stage A / stage B scripts, sampling stage, unsupervised stage, GPU variants of the stage scripts"
+   },
+   {
+    "name": "Model evaluation",
+    "icon": "chart",
+    "hue": 285,
+    "cat": "AI & Data · Machine learning",
+    "note": "Calibrated scores around stage A with the chosen cut-off shipped as a file; stage outputs judged per class, not by accuracy.",
+    "ev": "stageA_threshold.pkl, evaluation scripts"
+   },
+   {
+    "name": "Data cleaning",
+    "icon": "table",
+    "hue": 285,
+    "cat": "AI & Data · Data preparation",
+    "note": "6,659,532 flow records across 78 columns loaded from sharded CSVs.",
+    "ev": "CSE-CIC-IDS2018-on-AWS Datasets/"
+   },
+   {
+    "name": "AWS & cloud cost",
+    "icon": "cloudcost",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Cloud",
+    "note": "CIC-IDS2018 AWS export — 6,320,003 flow records pulled from the S3 bucket the dataset ships in; the three-stage cascade re-executed from stored CSVs on cloud infrastructure.",
+    "ev": "CSE-CIC-IDS2018-on-AWS/Datasets/, bench.md"
+   },
+   {
+    "name": "PyInstaller",
+    "icon": "box",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "Case-study runner as `cse-ids-case-study.exe` (9.6 MB).",
+    "ev": "spec files"
+   },
+   {
+    "name": "Intrusion detection",
+    "icon": "packets",
+    "hue": 152,
+    "cat": "Networks · Detection",
+    "note": "CSE-CIC-IDS2018 netflow labels as the ground truth for the cascade.",
+    "ev": "Datasets/ shards"
+   },
+   {
+    "name": "Python",
+    "icon": "brand:python",
+    "hue": 325,
+    "cat": "Languages · Backend",
+    "note": "Every stage of the cascade, from CSV load to calibrated scoring.",
+    "ev": "scripts across the CSE-CIC-IDS2018 tree"
+   }
   ]
  },
  "Litmus": {
   "output": "Web app + exe",
+  "desc": "A platform that flags AI-written text: an Angular 22 front end, an offline Python engine, and a benchmark that ranks the detectors against each other. 48 models were measured over a 48-text human/AI corpus — 1,090 scored decisions, 869 right, a pooled accuracy of 0.7972 — with coverage reported beside accuracy, because the best model decides 47 of 48 texts and the worst answers 3. Provider keys are encrypted at rest, so no plaintext secret ships.",
   "year": "2026",
   "kind": "Project",
   "org": "",
@@ -146,10 +273,133 @@ window.WORKS = {
     "0",
     "plaintext keys"
    ]
+  ],
+  "tech": [
+   {
+    "name": "Flask",
+    "icon": "brand:flask",
+    "hue": 196,
+    "cat": "Fullstack · Backend",
+    "note": "Flask 3 application factory with a WSGI entry point.",
+    "ev": "backend/app.py, wsgi.py"
+   },
+   {
+    "name": "REST APIs",
+    "icon": "api",
+    "hue": 196,
+    "cat": "Fullstack · Backend",
+    "note": "Detection and ranking routes behind the Angular client.",
+    "ev": "backend/app.py"
+   },
+   {
+    "name": "Angular",
+    "icon": "brand:angular",
+    "hue": 196,
+    "cat": "Fullstack · Frontend",
+    "note": "Angular 22 standalone components with a dev proxy to the API.",
+    "ev": "frontend/src, proxy.conf.json"
+   },
+   {
+    "name": "Auth & access control",
+    "icon": "key",
+    "hue": 196,
+    "cat": "Fullstack · Auth & access",
+    "note": "Admin calibrates per-model thresholds and steers the endpoint lanes; a signed-in user's own key beats the admin's shared one and history stays owner-scoped — the packaged exe runs the same app in single-owner mode.",
+    "ev": "backend/app.py, db.seed_admin"
+   },
+   {
+    "name": "Model evaluation",
+    "icon": "chart",
+    "hue": 285,
+    "cat": "AI & Data · Machine learning",
+    "note": "A Node harness calibrates lanes and sweeps bands over a 48-text holdout.",
+    "ev": "benchmark/calibrate.js, band-sweep.js"
+   },
+   {
+    "name": "AI-text detection",
+    "icon": "textscan",
+    "hue": 285,
+    "cat": "AI & Data · NLP & search",
+    "note": "AI-written text scoring with phrase-level evidence.",
+    "ev": "backend detection engine"
+   },
+   {
+    "name": "RAG & document retrieval",
+    "icon": "graph",
+    "hue": 285,
+    "cat": "AI & Data · NLP & search",
+    "note": "PDF, txt, md and docx ingestion for the detector.",
+    "ev": "backend/extract.py, pypdf + PyMuPDF fallback"
+   },
+   {
+    "name": "n8n",
+    "icon": "scaffold",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "The detector also ships as three committed workflows — AI-only (14 nodes), full pipeline (25) and human-review queue (7) — with the parsing in the workflow's own code nodes and every credentials map left empty.",
+    "ev": "ai-text-detector/n8n/*.json"
+   },
+   {
+    "name": "PyInstaller",
+    "icon": "box",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "Offline detection engine packaged as `litmus-AI-Text-Detector.exe` (43.7 MB).",
+    "ev": "spec files, build scripts"
+   },
+   {
+    "name": "Secrets management",
+    "icon": "vault",
+    "hue": 2,
+    "cat": "Security · Hardening",
+    "note": "LLM provider keys encrypted at rest before use.",
+    "ev": "cryptography package in backend requirements"
+   },
+   {
+    "name": "Hardening & guardrails",
+    "icon": "guard",
+    "hue": 2,
+    "cat": "Security · Hardening",
+    "note": "Double-submit CSRF compared with hmac.compare_digest, 8 calls per 900s.",
+    "ev": "security.py"
+   },
+   {
+    "name": "Threat modelling",
+    "icon": "threat",
+    "hue": 2,
+    "cat": "Security · Hardening",
+    "note": "Provider keys encrypted at rest and rate-limited lanes.",
+    "ev": "backend security module"
+   },
+   {
+    "name": "JavaScript",
+    "icon": "brand:javascript",
+    "hue": 325,
+    "cat": "Languages · Frontend",
+    "note": "The Angular 22 front end is one JS family with the rest: TypeScript source, plain-JS browser bundle, standalone components.",
+    "ev": "frontend/src"
+   },
+   {
+    "name": "TypeScript",
+    "icon": "brand:typescript",
+    "hue": 325,
+    "cat": "Languages · Frontend",
+    "note": "Angular 22 standalone components compiled under TS ~6.0.",
+    "ev": "frontend/angular.json, tsconfig.json"
+   },
+   {
+    "name": "Python",
+    "icon": "brand:python",
+    "hue": 325,
+    "cat": "Languages · Backend",
+    "note": "The offline detection engine behind the Flask API.",
+    "ev": "backend/app.py, backend/extract.py"
+   }
   ]
  },
  "ESI Wiki": {
   "output": "Web app + exe",
+  "desc": "A school knowledge base for the ESI course archive: Django and React over SQLite, with 1,403 documents cut into 19,646 chunks and mirrored into an FTS5 index ranked by bm25. The assistant answers from the corpus itself on four tiers — the database first, the index second, a model last — measured at 0.056 s for an FAQ-table answer against 6.06 s for a corpus excerpt, with all 14 read endpoints landing between 13 and 85 ms.",
   "year": "2026",
   "kind": "Project",
   "org": "",
@@ -204,10 +454,93 @@ window.WORKS = {
     "keyless",
     "zip you can run"
    ]
+  ],
+  "tech": [
+   {
+    "name": "Django",
+    "icon": "brand:django",
+    "hue": 196,
+    "cat": "Fullstack · Backend",
+    "note": "Django 5.2 with DRF 3.18; pagination configured centrally and search served from the app itself.",
+    "ev": "backend/config/settings.py, backend/catalog/"
+   },
+   {
+    "name": "REST APIs",
+    "icon": "api",
+    "hue": 196,
+    "cat": "Fullstack · Backend",
+    "note": "Serialised catalogue and search endpoints behind DRF routers.",
+    "ev": "api/urls.py"
+   },
+   {
+    "name": "React",
+    "icon": "brand:react",
+    "hue": 196,
+    "cat": "Fullstack · Frontend",
+    "note": "React 18.3 with React Router 6.26 over the Django API — catalogue, search and the assistant panel.",
+    "ev": "frontend/src, frontend/package.json"
+   },
+   {
+    "name": "Database engineering",
+    "icon": "database",
+    "hue": 196,
+    "cat": "Fullstack · Databases",
+    "note": "Django migrations across the catalogue apps; the ORM querysets sit on SQLite carrying the FTS5 index.",
+    "ev": "kmprj */migrations, catalog/models.py, config/settings.py"
+   },
+   {
+    "name": "RAG & document retrieval",
+    "icon": "graph",
+    "hue": 285,
+    "cat": "AI & Data · NLP & search",
+    "note": "PDF text with empty-password decrypt and docx/pptx by unzipping their XML, into a SQLite FTS5 index ranked by bm25 and accent-folded — behind a four-tier assistant: local answer, index, provider, keyless.",
+    "ev": "catalog/corpus.py _pdf_text/_ooxml_text, aichat/views.py"
+   },
+   {
+    "name": "Build, deps & Git",
+    "icon": "deps",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "Public repo kept to one clean commit with the course PDFs left untracked.",
+    "ev": "github.com/LORDUSecurity/esi-wiki"
+   },
+   {
+    "name": "JavaScript",
+    "icon": "brand:javascript",
+    "hue": 325,
+    "cat": "Languages · Frontend",
+    "note": "React 18.3 components are JSX — catalogue, search and the assistant panel compile into the JS bundle the Django API serves.",
+    "ev": "frontend/src, frontend/package.json"
+   },
+   {
+    "name": "Python",
+    "icon": "brand:python",
+    "hue": 325,
+    "cat": "Languages · Backend",
+    "note": "Django views and the corpus extractor that reads 900+ documents.",
+    "ev": "catalog/corpus.py, aichat/views.py"
+   },
+   {
+    "name": "SQL",
+    "icon": "brand:mysql",
+    "hue": 325,
+    "cat": "Languages · Databases",
+    "note": "FTS5 virtual table and bm25-ranked queries.",
+    "ev": "catalog/corpus.py"
+   },
+   {
+    "name": "Multilingual working",
+    "icon": "globe",
+    "hue": 48,
+    "cat": "Quality & Docs · Documentation",
+    "note": "A French course corpus with accent-tolerant matching.",
+    "ev": "unicode61 remove_diacritics, _fold()"
+   }
   ]
  },
  "Cisco ISE": {
   "output": "PDF guide",
+  "desc": "A 19-page Cisco ISE mini guide written during the Data Digital Maroc internship: AAA, RADIUS and 802.1X built up from the protocol messages, the three ISE personas and what each one carries, wired, wireless and VPN logins traced as three separate end-to-end flows, four deployment models side by side, and a comparison of seven NAC products. A reference document for the lab rather than a product summary.",
   "year": "2025",
   "kind": "Internship",
   "org": "Data Digital Maroc",
@@ -256,10 +589,45 @@ window.WORKS = {
     "758 KB",
     "guide PDF"
    ]
+  ],
+  "tech": [
+   {
+    "name": "Auth & access control",
+    "icon": "key",
+    "hue": 196,
+    "cat": "Fullstack · Auth & access",
+    "note": "Identity is the product: logins centralised on a policy service.",
+    "ev": "resume: Cisco ISE, AAA"
+   },
+   {
+    "name": "NAC & identity (ISE, 802.1X, RADIUS)",
+    "icon": "nac",
+    "hue": 152,
+    "cat": "Networks · Access & AAA",
+    "note": "Cisco ISE deployed as Policy Admin, Policy Service and Monitoring personas; 802.1X on the wired edge with MAB fallback and dynamic VLAN assignment carried in the RADIUS reply, device admin separated on TACACS+.",
+    "ev": "resume: Cisco ISE deployment, RADIUS / TACACS+"
+   },
+   {
+    "name": "Wireshark / pcap",
+    "icon": "packets",
+    "hue": 152,
+    "cat": "Networks · Operations",
+    "note": "RADIUS and 802.1X handshakes traced packet-by-packet across the wired, wireless and VPN flows.",
+    "ev": "network.pkt, shot_eve_topology_basic.png"
+   },
+   {
+    "name": "Lab simulation & network automation",
+    "icon": "topology",
+    "hue": 152,
+    "cat": "Networks · Operations",
+    "note": "The whole deployment built as an EVE-NG lab.",
+    "ev": "resume: EVE-NG"
+   }
   ]
  },
  "GameVerse Academy": {
   "output": "Web app",
+  "desc": "A secure mod-sharing platform for a gaming community: 13 vanilla servlets and JSP on embedded Tomcat, one 30.8 MB portable jar. Sessions regenerate at login, passwords are PBKDF2-HMAC-SHA256 at 310,000 rounds, XSS and SQL injection are closed by global filters, and an unauthenticated hit on /AdminController returns 403 rather than a login redirect. Measured on the shipped jar: catalogue pages 15–34 ms, a 17.7 MB mod download in 117 ms.",
   "year": "2026",
   "kind": "Project",
   "org": "",
@@ -310,10 +678,101 @@ window.WORKS = {
     "13",
     "servlets"
    ]
+  ],
+  "tech": [
+   {
+    "name": "Java servlets",
+    "icon": "brand:apachetomcat",
+    "hue": 196,
+    "cat": "Fullstack · Backend",
+    "note": "Vanilla servlets and JSP/JSTL as the MVC and view layer on embedded Tomcat.",
+    "ev": "Main.java (new Tomcat() + addWebapp), src/main/webapp"
+   },
+   {
+    "name": "Validation & upload handling",
+    "icon": "validate",
+    "hue": 196,
+    "cat": "Fullstack · Backend",
+    "note": "Form handling validated in controllers before any repository call; mod uploads behind an extension allowlist with SVG explicitly refused.",
+    "ev": "src/main/java/controller, upload handling"
+   },
+   {
+    "name": "Database engineering",
+    "icon": "database",
+    "hue": 196,
+    "cat": "Fullstack · Databases",
+    "note": "MariaDB driver with H2 and SQLite for local runs — all three shipped inside the jar.",
+    "ev": "pom.xml dependencies"
+   },
+   {
+    "name": "Auth & access control",
+    "icon": "key",
+    "hue": 196,
+    "cat": "Fullstack · Auth & access",
+    "note": "Login invalidates the pre-auth session before issuing a new one; SecurityFilter answers 403 on /AdminController without an admin session, not a redirect.",
+    "ev": "LoginController oldSession.invalidate(), SecurityFilter.java, error403.jsp"
+   },
+   {
+    "name": "Build, deps & Git",
+    "icon": "deps",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "Maven shade for a portable jar plus a war for a real Tomcat, coordinates pinned to embedded Tomcat 9.0.104; public GitHub Classroom history.",
+    "ev": "pom.xml, github.com/LORDUSecurity/gameverse-academy"
+   },
+   {
+    "name": "Docker & reproducible runs",
+    "icon": "clusters",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Environments",
+    "note": "The app boots its own servlet container on 8080 under /gameverseacademy.",
+    "ev": "Main.java"
+   },
+   {
+    "name": "Vulnerability testing",
+    "icon": "evidence",
+    "hue": 2,
+    "cat": "Security · Offensive testing",
+    "note": "The defensive side: a global filter over every response closes XSS, and prepared statements only — no createStatement anywhere in the repositories.",
+    "ev": "@WebFilter(\"/*\") SecurityFilter, UserRepository, ModRepository"
+   },
+   {
+    "name": "Secrets management",
+    "icon": "vault",
+    "hue": 2,
+    "cat": "Security · Hardening",
+    "note": "PBKDF2-HMAC-SHA256 at 310,000 rounds over a 32-byte salt, constant-time compare.",
+    "ev": "password utility in src/main/java"
+   },
+   {
+    "name": "Hardening & guardrails",
+    "icon": "guard",
+    "hue": 2,
+    "cat": "Security · Hardening",
+    "note": "CSRF and CSP headers, X-Frame-Options, nosniff, direct JSP access blocked.",
+    "ev": "SecurityFilter"
+   },
+   {
+    "name": "Threat modelling",
+    "icon": "threat",
+    "hue": 2,
+    "cat": "Security · Hardening",
+    "note": "Sessions regenerated at login, uploads allowlisted, filters global.",
+    "ev": "documented in README + code"
+   },
+   {
+    "name": "Java",
+    "icon": "brand:openjdk",
+    "hue": 325,
+    "cat": "Languages · Backend",
+    "note": "13 servlets over an MVC layer, plus filters and repositories.",
+    "ev": "src/main/java/controller, service, repository"
+   }
   ]
  },
  "raxag": {
   "output": "Windows app",
+  "desc": "Nine network-integration services for Raisecom equipment: point it at a folder of `show running-config` dumps, or right-click it — the installer registers an Explorer verb — and it returns the provisioning table, an LLDP rebuild and a copy-paste HTML sheet. A ten-pattern redactor strips secrets before anything leaves the machine. One sweep of 17 real dumps gives 1,794 rows in 2.62 s median, two styled workbooks, two copier pages and a run folder whose manifest survives a crash. 629 checks green across five suites; the EN + FR guide ships with the exe.",
   "year": "2025",
   "kind": "Internship",
   "org": "Raisecom",
@@ -358,6 +817,96 @@ window.WORKS = {
     "EN + FR",
     "guide shipped"
    ]
+  ],
+  "tech": [
+   {
+    "name": "n8n",
+    "icon": "scaffold",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "The config-parser pipeline: n8n watches a folder of `show running-config` dumps, fans out to the nine Python services and writes the workbook back.",
+    "ev": "n8n/, docker-compose.yml (n8n-config-parser-pipeline)"
+   },
+   {
+    "name": "PyInstaller",
+    "icon": "box",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "Nine services compiled to `raxag.exe` (248 files, 113.2 MB onedir), then Inno Setup wraps the installer.",
+    "ev": "build_exe.bat, raxag.spec"
+   },
+   {
+    "name": "Build, deps & Git",
+    "icon": "deps",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Delivery",
+    "note": "The whole toolset compiled into one Windows exe.",
+    "ev": "resume: PyInstaller"
+   },
+   {
+    "name": "Docker & reproducible runs",
+    "icon": "clusters",
+    "hue": 242,
+    "cat": "Cloud & DevOps · Environments",
+    "note": "docker compose up starts the n8n controller alongside the parser services — the whole pipeline in one command.",
+    "ev": "docker-compose.yml"
+   },
+   {
+    "name": "Secrets management",
+    "icon": "vault",
+    "hue": 2,
+    "cat": "Security · Hardening",
+    "note": "A secret-stripping pass over captured device output before anything is written.",
+    "ev": "resume: secret-stripping pass"
+   },
+   {
+    "name": "Lab simulation & network automation",
+    "icon": "topology",
+    "hue": 152,
+    "cat": "Networks · Operations",
+    "note": "Parsers per service, with LLDP neighbour rows stitched back into a link map.",
+    "ev": "resume: CLI parsers, LLDP topology rebuild"
+   },
+   {
+    "name": "Python",
+    "icon": "brand:python",
+    "hue": 325,
+    "cat": "Languages · Backend",
+    "note": "Nine CLI-parsing services compiled into one exe.",
+    "ev": "resume: Python, PyInstaller"
+   },
+   {
+    "name": "Automated & browser testing",
+    "icon": "test",
+    "hue": 48,
+    "cat": "Quality & Docs · Testing",
+    "note": "629 checks behind the shipped exe.",
+    "ev": "resume: 629 passing checks"
+   },
+   {
+    "name": "Technical writing",
+    "icon": "report",
+    "hue": 48,
+    "cat": "Quality & Docs · Documentation",
+    "note": "A bilingual usage guide shipped with the exe.",
+    "ev": "resume: bilingual guide"
+   },
+   {
+    "name": "Multilingual working",
+    "icon": "globe",
+    "hue": 48,
+    "cat": "Quality & Docs · Documentation",
+    "note": "Documentation in English and Chinese for the vendor context.",
+    "ev": "resume: bilingual guide"
+   }
   ]
  }
+};
+window.CONTACT = {
+ "name": "Mohamed Amine Chafik",
+ "role": "Cybersecurity engineering student · secure software developer",
+ "location": "Rabat, Morocco",
+ "email_esi": "mohamed-amine.chafik@esi.ac.ma",
+ "github": "https://github.com/LORDUSecurity",
+ "linkedin": "https://www.linkedin.com/in/mohamed-amine-chafik-8b747532b"
 };
