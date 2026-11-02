@@ -671,6 +671,22 @@ function renderAbout() {
     <div class="cw-body"><div class="cw-inner">${cwRows}</div></div>
   </details>`;
 
+  /* the quote walked as a thread: the two lines that are his sit on the sender's
+     side, the heckler's line opposite. A real chat says when each line landed and
+     whether it was read, so each bubble carries its time and the sender's carry
+     the ticks — the first read (the reply proves it), the last still waiting. */
+  const tick = '<svg class="tk" viewBox="0 0 18 12" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M1.2 6.4 4 9.2 10.6 2.2"/><path d="M7.8 6.4 10.6 9.2 17.2 2.2"/></svg>';
+  const convo = `
+    <section class="jack-sec">
+      <div class="jack" aria-label="Jack of all trades">
+        <p class="bub me b1">Jack of all trades,<span class="mt seen"><time>09:41</time>${tick}</span></p>
+        <p class="bub them b2">master of none,<span class="mt"><time>09:41</time></span></p>
+        <p class="bub me b3">but oftentimes better than a master of one.<span class="mt"><time>09:43</time>${tick}</span></p>
+      </div>
+    </section>`;
+
   app.innerHTML = `
   <section class="hero wrap">
     <div class="eyebrow"><i></i>about · 2026</div>
@@ -687,6 +703,7 @@ function renderAbout() {
   </section>
 
   <article class="about wrap">
+    ${convo}
     <div class="about-top">
       <div class="about-prose">
         <p>What arrives at the other end of a hire — each of these has been built once, measured, and shipped:</p>
@@ -740,14 +757,6 @@ function renderAbout() {
         </div>
       </aside>
     </div>
-
-    <section class="d-section">
-      <div class="jack" aria-label="Jack of all trades">
-        <p class="bub b1">Jack of all trades,</p>
-        <p class="bub b2">master of none,</p>
-        <p class="bub b3">but oftentimes better than a master of one.</p>
-      </div>
-    </section>
 
     <section class="d-section">
       <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Education</h2><span class="sec-line"></span></div>

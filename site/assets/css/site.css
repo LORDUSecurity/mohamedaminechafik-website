@@ -447,17 +447,30 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .about-note{color:#b9bec7;font-size:15px;line-height:1.7;max-width:82ch}
 .about-note a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 
-/* three-bubble reply: the quote walked as a conversation, each line stepping out
-   from the one before it, the third landing as the answer */
-.jack{display:grid;gap:10px;padding:4px 0;max-width:820px}
+/* the quote as a thread. The sender takes the right, the heckler the left, so
+   the first and last lines — both his — come from the same side and the answer
+   lands where his other message landed. Each bubble carries the time it was
+   sent; the sender's carry the ticks, coloured when read and plain when not. */
+.jack-sec{margin-top:8px}
+.jack{display:grid;gap:12px;padding:4px 0;max-width:820px}
 .bub{position:relative;--cut:12px;width:fit-content;max-width:100%;padding:12px 20px;clip-path:var(--shape-4);
   font-size:clamp(15px,1.8vw,20px);line-height:1.45;letter-spacing:-.01em;
   animation:bub-in .55s cubic-bezier(.2,.7,.2,1) both}
-.bub::before{content:"";position:absolute;left:-9px;top:15px;width:10px;height:12px;background:inherit;
-  clip-path:polygon(100% 0,100% 100%,0 50%)}
+.bub.me{justify-self:end}
+.bub.them{justify-self:start}
+.bub::before{content:"";position:absolute;top:15px;width:10px;height:12px;background:inherit}
+.bub.me::before{right:-9px;clip-path:polygon(0 0,0 100%,100% 50%)}
+.bub.them::before{left:-9px;clip-path:polygon(100% 0,100% 100%,0 50%)}
+/* the stamp rides in the bubble's own corner, the way a chat puts it: floated so
+   a one-line message keeps it on the line and a wrapping one drops it under */
+.mt{float:right;display:flex;align-items:center;gap:5px;margin:6px -11px -4px 14px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--dimmer)}
+.mt .tk{width:15px;height:10px;color:var(--dimmer)}
+.mt.seen .tk{color:var(--accent)}
 .b1{background:#12151b;color:var(--dim);animation-delay:.05s}
-.b2{background:#171b23;color:var(--ink);margin-left:clamp(18px,4vw,54px);animation-delay:.25s}
-.b3{background:var(--accent);color:#06070a;font-weight:600;margin-left:clamp(36px,8vw,108px);animation-delay:.45s}
+.b2{background:#171b23;color:var(--ink);animation-delay:.25s}
+.b3{background:var(--accent);color:#06070a;font-weight:600;animation-delay:.45s}
+.b3 .mt,.b3 .mt .tk{color:rgba(6,7,10,.55)}
 @keyframes bub-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .edu{display:grid;gap:1px;background:rgba(255,255,255,.075)}
 .edu-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr) auto;gap:16px;
