@@ -687,7 +687,7 @@ function renderAbout() {
     `<p class="bub ${side} ${cls}"><span class="body">${text}` +
     (stamp ? `<span class="mt${seen ? ' seen' : ''}"><time>${stamp}</time>${side === 'me' ? tick : ''}</span>` : '') +
     `</span>` +
-    (react ? `<span class="rx" aria-label="${react.n} reactions"><i aria-hidden="true">${react.e}</i><b>${react.n}</b></span>` : '') +
+    (react ? `<span class="rx" aria-label="${react.n} reactions"><i aria-hidden="true">${react.e}</i></span>` : '') +
     `</p>`;
   const convo = `
     <div class="jack" aria-label="Jack of all trades">
