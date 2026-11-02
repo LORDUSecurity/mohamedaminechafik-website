@@ -57,9 +57,11 @@ function btn(href, label, mark, cls, internal) {
 
 function buildChrome() {
   /* the door is on screen for the whole walk, over the welcome and the farewell
-     alike: leaving the room is never something the visitor has to hunt for */
-  el.door.innerHTML = '<a class="btn btn-ico btn-ghost" href="' + SITE + '" title="Exit to the portfolio" aria-label="Exit to the portfolio">' +
-    '<span class="face">' + icon('exit') + '</span></a>';
+     alike: leaving the room is never something the visitor has to hunt for.
+     It carries its own word — a lone glyph in a corner is a thing to find, not
+     a thing to read. */
+  el.door.innerHTML = '<a class="btn btn-exit" href="' + SITE + '" title="Exit to the portfolio" aria-label="Exit to the portfolio">' +
+    '<span class="face">' + icon('exit') + '<span>Exit</span></span></a>';
 
   /* the channels are offered once, at the end of the walk */
   [
