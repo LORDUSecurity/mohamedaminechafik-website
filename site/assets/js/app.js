@@ -710,7 +710,6 @@ function renderAbout() {
   </section>
 
   <article class="about wrap">
-    ${convo}
     <div class="about-top">
       <div class="about-prose">
         <p>What arrives at the other end of a hire — each of these has been built once, measured, and shipped:</p>
@@ -748,21 +747,24 @@ function renderAbout() {
             <i>FixProof · Cisco ISE internship · OCI certified</i></li>
         </ul>
       </div>
-      <aside class="about-card">
-        <div class="face">
-          <dl>
-            <div><dt>Based in</dt><dd>${esc(C.location)}</dd></div>
-            <div><dt>Studying</dt><dd>ISSIC — ESI Rabat</dd></div>
-            <div><dt>Graduating</dt><dd>July 2027</dd></div>
-            <div><dt>Certified by</dt><dd>Oracle — OCI Security Professional</dd></div>
-            <div><dt>Languages</dt><dd>Arabic (native) · English (advanced) · French (intermediate)</dd></div>
-          </dl>
-          <div class="actions">
-            <a class="btn btn-accent cut cut-4" href="#/contact"><span class="face">Contact <span class="arr">↗</span></span></a>
-            <a class="btn btn-ghost cut cut-4" href="#/"><span class="face">The work</span></a>
+      <div class="about-side">
+        ${convo}
+        <aside class="about-card">
+          <div class="face">
+            <dl>
+              <div><dt>Based in</dt><dd>${esc(C.location)}</dd></div>
+              <div><dt>Studying</dt><dd>ISSIC — ESI Rabat</dd></div>
+              <div><dt>Graduating</dt><dd>July 2027</dd></div>
+              <div><dt>Certified by</dt><dd>Oracle — OCI Security Professional</dd></div>
+              <div><dt>Languages</dt><dd>Arabic (native) · English (advanced) · French (intermediate)</dd></div>
+            </dl>
+            <div class="actions">
+              <a class="btn btn-accent cut cut-4" href="#/contact"><span class="face">Contact <span class="arr">↗</span></span></a>
+              <a class="btn btn-ghost cut cut-4" href="#/"><span class="face">The work</span></a>
+            </div>
           </div>
-        </div>
-      </aside>
+        </aside>
+      </div>
     </div>
 
     <section class="d-section">
