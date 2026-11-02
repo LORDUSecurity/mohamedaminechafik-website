@@ -418,9 +418,9 @@ function buildActions(root, d) {
     'Drive folder <span class="arr">&nearr;</span></span></a>');
   if (links.repo) acts.push('<a class="btn btn-ico" href="' + esc(links.repo) + '" target="_blank" rel="noopener" title="Repository" aria-label="Repository"><span class="face">' +
     icon('brand:github') + '</span></a>');
-  if (links.site && /zenodo\.org\/records\//.test(links.site)) acts.push('<a class="btn btn-ico" href="' + esc(links.site) + '" target="_blank" rel="noopener" title="Zenodo record" aria-label="Zenodo record"><span class="face">' +
-    '<img src="site/assets/logos/zenodo-ze.png" alt=""></span></a>');
-  else if (links.site) acts.push('<a class="btn" href="' + esc(links.site) + '" target="_blank" rel="noopener"><span class="face">' +
+  if (links.zenodo) acts.push('<a class="btn btn-ico" href="' + esc(links.zenodo) + '" target="_blank" rel="noopener" title="Zenodo record" aria-label="Zenodo record">' +
+    '<span class="face"><img src="site/assets/logos/zenodo-ze.png" alt=""></span></a>');
+  if (links.site) acts.push('<a class="btn" href="' + esc(links.site) + '" target="_blank" rel="noopener"><span class="face">' +
     'Live site <span class="arr">&nearr;</span></span></a>');
   if (links.rg) acts.push('<a class="btn btn-ico" href="' + esc(links.rg) + '" target="_blank" rel="noopener" title="ResearchGate publication" aria-label="ResearchGate publication"><span class="face">' +
     icon('brand:researchgate') + '</span></a>');

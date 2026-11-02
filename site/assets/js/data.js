@@ -52,7 +52,9 @@ window.SITE = {
    "hero": "02-ranking.webp",
    "links": {
     "site": "https://ai-text-ranking-630tcvp9y1c.qoder.website",
-    "repo": "https://github.com/LORDUSecurity/litmus-ai-text-detector"
+    "repo": "https://github.com/LORDUSecurity/litmus-ai-text-detector",
+    "zenodo": "https://zenodo.org/records/23460013",
+    "rg": "https://www.researchgate.net/publication/416249089_Free-Tier_LLM_Gateways_as_AI-Text_Detectors_A_Dated_Benchmark_of_Model_Accuracy_Quota_Regimes_Availability_Churn_and_Out-of-Sample_Stability"
    },
    "sample": {
     "id": "1gBA6zsvmzqTs4Pvi_zoqSU6Kh1x2BZAU",
