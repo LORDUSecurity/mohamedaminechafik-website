@@ -917,6 +917,7 @@ function render() {
   const state = parseHash();
   hideTip();
   markNav(state);
+  setNav(false);
   if (state.view === 'certs') renderCerts();
   else if (state.view === 'about') renderAbout();
   else if (state.view === 'contact') renderContact();
@@ -931,6 +932,23 @@ function render() {
   else window.scrollTo({top: 0, behavior: 'instant' in window ? 'instant' : 'auto'});
 }
 renderFooter();
+
+/* the phone bar keeps only the mark, so the links wait in a panel behind the
+   handle: it closes on a pick, on a tap past it, on Escape and on any route */
+const topBar = document.getElementById('top');
+const menuBtn = document.getElementById('menuBtn');
+function setNav(open) {
+  topBar.classList.toggle('nav-open', open);
+  menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  menuBtn.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+}
+menuBtn.addEventListener('click', () => setNav(!topBar.classList.contains('nav-open')));
+document.addEventListener('click', e => {
+  if (!topBar.classList.contains('nav-open') || e.target.closest('.menu-btn')) return;
+  if (!e.target.closest('.drawer') || e.target.closest('a')) setNav(false);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setNav(false); });
+
 window.addEventListener('hashchange', render);
 
 /* pointer-tracked backdrop, live only on the Skills route (body.fx-cursor):
