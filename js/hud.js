@@ -364,8 +364,7 @@ function buildActions(root, d) {
   const links = d.links || {};
   const acts = [];
   if (d.sample) {
-    const label = /\.ipynb$/i.test(d.sample.name) ? 'Download notebook'
-      : /\.(zip|exe)$/i.test(d.sample.name) ? 'Download package' : 'Download sample';
+    const label = /\.ipynb$/i.test(d.sample.name) ? 'Download notebook' : 'Download sample';
     acts.push('<a class="btn btn-accent" href="' + esc(d.sample.url) + '" target="_blank" rel="noopener"><span class="face">' +
       label + ' <span class="arr">&darr;</span></span></a>');
   }

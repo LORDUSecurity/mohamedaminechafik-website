@@ -296,31 +296,40 @@
     font-family: var(--mono); font-size: 12px; line-height: 1.7; letter-spacing: .02em;
   }
   /* ========================================================== buttons ====
-     The portfolio's button idiom, moved whole: a one-pixel accent frame around a
-     panel face, four corners chamfered, and on hover the frame's colour floods
-     the plate while the mark knocks out dark inside a glow. No staged ignition
-     and no waiting — the flood is the whole animation.
+     The portfolio's button idiom, moved whole: a one-pixel frame around a panel
+     face, four corners chamfered. A text button warms on hover — the frame goes
+     accent, the face takes a 12% tint and the label lifts to white. The logo-only
+     and download buttons flood: the plate goes solid accent and the mark knocks
+     out dark inside a glow, the portfolio's neon hover. No staged ignition and no
+     waiting — the flood is the whole animation.
      The clip is written out rather than built from --cut, because --cut is the
      plate's wedge size and a button must not inherit it. */
   .btn{--edge:var(--line-2);display:inline-flex;background:var(--edge);padding:1px;
     clip-path:polygon(0 10px,10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px));
     pointer-events:auto;cursor:pointer;text-decoration:none;
-    transition:background .2s ease,filter .25s ease,transform .15s ease}
-  .btn>.face{display:inline-flex;align-items:center;gap:9px;background:var(--panel);padding:10px 15px;
+    transition:background .2s ease,filter .25s ease,transform .2s ease}
+  .btn>.face{display:inline-flex;align-items:center;gap:10px;background:var(--panel);padding:12px 18px;
     clip-path:polygon(0 10px,10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px));
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--ink);white-space:nowrap;transition:background .2s ease,color .2s ease}
   .btn:hover{--edge:var(--accent);filter:drop-shadow(0 0 14px color-mix(in srgb, var(--edge) 45%, transparent))}
-  .btn:hover>.face{background:var(--accent);color:#06070a}
+  .btn:hover>.face{background:color-mix(in srgb, var(--accent) 12%, var(--panel));color:#fff}
   .btn:active{transform:translateY(1px)}
-  .btn svg{width:15px;height:15px;flex:none;fill:currentColor}
-  .btn svg:not([fill]){fill:none;stroke:currentColor;stroke-width:1.6}
-  .btn .arr{font-size:12px;line-height:1}
-  .btn-ico>.face{padding:10px 12px}
-  .btn-ico svg{width:17px;height:17px}
-  .btn-ico img{width:17px;height:17px;object-fit:contain}
+  /* size only: a glyph carries its own fill="none" stroke inline, so the CSS must
+     not flood it — only the brand marks (no fill attribute) are filled solid, the
+     way the portfolio's repo / record buttons fill theirs */
+  .btn svg{width:18px;height:18px;flex:none}
+  .btn svg.brand{fill:currentColor;stroke:none}
+  .btn .arr{color:var(--accent);font-size:13px;line-height:1}
   .btn-ghost>.face{background:transparent;color:var(--dim)}
-  .btn-ghost:hover>.face{color:#06070a}
+  .btn-ghost:hover>.face{color:var(--ink)}
+  /* logo-only marks flood the plate and knock out dark inside a glow — the same
+     neon hover the portfolio's repo / drive / record buttons carry */
+  .btn-ico>.face{padding:11px 14px}
+  .btn-ico img{width:18px;height:18px;object-fit:contain}
+  .btn-ico:hover>.face{background:var(--accent);color:#06070a}
+  .btn-ico:hover svg{filter:drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 85%, transparent)) brightness(0)}
+  .btn-ico:hover img{filter:brightness(0) drop-shadow(0 0 7px var(--accent))}
 
   /* the framed output label: what the work actually is, in the work's colour */
   .out{display:inline-flex;align-items:center;padding:4px 9px;
@@ -409,9 +418,9 @@
   #detail .dlede{font-size:14.5px;line-height:1.7;color:var(--dim)}
   #detail .dlede b{color:var(--ink);font-weight:500}
   #detail .dstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-  #detail .stat{background:color-mix(in srgb, var(--accent) 30%, var(--line-2));padding:1px;
+  #detail .stat{background:#1a1e25;padding:1px;
     clip-path:polygon(0 9px,9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px))}
-  #detail .stat>div{background:var(--panel-2);padding:11px 12px 13px;
+  #detail .stat>div{background:var(--panel);padding:12px 12px 14px;
     clip-path:polygon(0 9px,9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px))}
   #detail .stat b{display:block;font-size:20px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
   #detail .stat span{display:block;margin-top:4px;font-family:var(--mono);font-size:8.5px;
@@ -468,7 +477,8 @@
   .tag svg{width:14px;height:14px;flex:none;color:var(--h);fill:none;stroke:currentColor;stroke-width:1.6}
   .tag svg.brand{fill:var(--h);stroke:none}
   .tag:hover,.tag.on{background:var(--h);filter:drop-shadow(0 0 9px color-mix(in srgb, var(--h) 40%, transparent))}
-  .tag:hover>.face,.tag.on>.face{background:color-mix(in srgb, var(--h) 18%, var(--panel));color:#fff}
+  .tag:hover>.face{background:color-mix(in srgb, var(--h) 16%, var(--panel));color:#fff}
+  .tag.on>.face{background:color-mix(in srgb, var(--h) 26%, var(--panel));color:#fff}
 
   /* the note a ticket carries. Fixed to the viewport and outside the sheet, so
      the dossier's own scroll and clip cannot cut it off. On a phone it is the
@@ -495,6 +505,7 @@
   .btn-accent{--edge:color-mix(in srgb, var(--accent) 70%, #333)}
   .btn-accent>.face{background:color-mix(in srgb, var(--accent) 14%, #0a0a0a);color:#fff}
   .btn-accent:hover>.face{background:var(--accent);color:#06070a}
+  .btn-accent:hover .arr{color:inherit}
   @media (max-width:980px){
     #detail .dtop{grid-template-columns:minmax(0,1fr)}
     #detail .dsheet{max-height:88vh}
