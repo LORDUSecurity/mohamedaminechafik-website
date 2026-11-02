@@ -246,16 +246,15 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .card>.face{background:var(--panel);clip-path:var(--shape);position:relative;overflow:hidden;height:100%}
 .card-media{position:relative;aspect-ratio:4/3;overflow:hidden;isolation:isolate;
   background:#0a0c10;border-bottom:1px solid rgba(255,255,255,.07)}
-/* the screenshot is shown as itself: full brightness, a touch of contrast so the
-   interface reads at a glance. The former dim duotone hid the work behind a wash */
+/* the screenshot keeps its own colours but sits dimmed, so a white interface
+   reads as one card among dark ones instead of firing at the eye; the top glow
+   is gone and the scrim under the caption is heavier. Hover lifts it back */
 .card-media img{position:relative;z-index:0;width:100%;height:100%;object-fit:cover;object-position:top center;
-  filter:contrast(1.07) saturate(1.06) brightness(1.04);transform:scale(1.005);
+  filter:contrast(1.04) saturate(.92) brightness(.8);transform:scale(1.005);
   transition:filter .45s ease, transform .9s cubic-bezier(.2,.7,.2,1)}
-.card-media::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(115% 85% at 50% -12%, rgba(255,255,255,.10), transparent 62%)}
-.card:hover .card-media img{filter:contrast(1.04) saturate(1.02) brightness(1.08);transform:scale(1.045)}
 .card-media::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
-  background:linear-gradient(180deg, rgba(6,7,10,.06) 0%, transparent 30%, rgba(9,10,13,.62) 100%)}
+  background:linear-gradient(180deg, rgba(6,7,10,.28) 0%, rgba(6,7,10,.08) 34%, rgba(9,10,13,.78) 100%)}
+.card:hover .card-media img{filter:contrast(1.02) saturate(1) brightness(.92);transform:scale(1.045)}
 .card-media .scan{display:none}
 .card-media .idx{position:absolute;top:12px;left:14px;z-index:3;font-family:var(--mono);font-size:10px;letter-spacing:.18em;
   color:rgba(255,255,255,.6);background:rgba(6,7,10,.55);padding:3px 7px;border:1px solid rgba(255,255,255,.1)}
