@@ -865,13 +865,11 @@ function updateCaption() {
     lastFocus = e;
     const w = e.work, cap = dom.cap;
     const hex = '#' + w.accent.toString(16).padStart(6, '0');
-    cap.style.setProperty('--accent', hex);
+    cap.style.setProperty('--hue', hex);
     cap.style.setProperty('--cut', CUT + 'px');
-    /* the same hue carries the chrome outside the card — the progress hairline,
-       the veil glow — the way a detail page's accent scopes the whole portfolio
-       header. The plate's own --accent stays on `cap`, so a card mid-walk cannot
-       inherit from another. */
-    document.documentElement.style.setProperty('--accent', hex);
+    /* the hue belongs to the card and to the painting: the HUD around it —
+       progress hairline, veil, download plate — stays on the chrome white, the
+       same way the portfolio header no longer rides the work's colour. */
     /* the frame and the glass take the same silhouette: the clip runs through
        both layers, so the 1px edge survives the chamfer as a lit diagonal */
     const shape = cutPath(w.cuts, CUT);

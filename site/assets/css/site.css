@@ -9,7 +9,7 @@
   --ink:#ece9e2;
   --dim:#8d939d;
   --dimmer:#737a85;
-  --accent:#ffd23f;
+  --accent:#f2f4f7;
   --mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --display:"Chakra Petch", Bahnschrift, "Segoe UI Variable Display", system-ui, sans-serif;
 
@@ -49,12 +49,20 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   background-size:26px 26px;
   mask-image:radial-gradient(ellipse 80% 70% at 50% 0%, #000 25%, transparent 78%);
   -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 0%, #000 25%, transparent 78%);
+  transform:translate(calc(var(--gx,0) * 16px), calc(var(--gy,0) * 12px));
+  transition:transform .45s cubic-bezier(.2,.7,.2,1);
 }
+.bg-cursor{
+  position:absolute;inset:0;--mx:50vw;--my:26vh;opacity:0;transition:opacity .5s ease;
+  background:radial-gradient(340px 340px at var(--mx) var(--my),
+    rgba(255,255,255,.13), rgba(255,255,255,.04) 45%, transparent 72%);
+}
+body.fx-cursor .bg-cursor{opacity:1}
 .bg-glow{
   position:absolute;left:50%;top:-38vh;width:120vw;height:90vh;transform:translateX(-50%);
   background:
     radial-gradient(closest-side at 30% 40%, rgba(79,141,255,.14), transparent 70%),
-    radial-gradient(closest-side at 72% 30%, rgba(255,210,63,.10), transparent 70%),
+    radial-gradient(closest-side at 72% 30%, rgba(255,255,255,.10), transparent 70%),
     radial-gradient(closest-side at 50% 30%, rgba(255,69,58,.07), transparent 70%);
   filter:blur(20px);
 }
@@ -69,17 +77,18 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* ============================================================ header ==== */
 .top{
   position:fixed;inset:0 0 auto;z-index:40;height:68px;
-  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;
   padding:0 clamp(16px,4vw,44px);
   background:linear-gradient(180deg, rgba(6,7,10,.92), rgba(6,7,10,.55) 70%, transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-bottom:1px solid rgba(255,255,255,.055);
 }
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;justify-self:start}
 .brand-mark{width:30px;height:30px;flex:none;object-fit:contain;
-  filter:drop-shadow(0 0 8px rgba(255,210,63,.45))}
+  filter:drop-shadow(0 0 8px rgba(255,255,255,.35))}
 .brand-word{font-size:13px;letter-spacing:.34em;font-weight:600;white-space:nowrap}
-.top-nav{display:flex;align-items:center;gap:clamp(8px,2vw,26px)}
+.top-nav{display:flex;align-items:center;gap:clamp(8px,2vw,26px);justify-self:center}
+.top-cta{display:flex;align-items:center;justify-self:end}
 .nav-link{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);padding:8px 2px;position:relative}
 .nav-link:hover{color:var(--ink)}
 .nav-link::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .25s ease}
@@ -101,8 +110,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .btn-ghost{--edge:#20252e}
 .btn-ghost>.face{background:transparent;color:var(--dim)}
 .btn-ghost:hover>.face{color:var(--ink)}
-.btn-museum{--edge:color-mix(in srgb, var(--accent) 55%, #2a2a2a)}
-.btn-museum>.face{background:#0b0a06}
+.btn-museum{--edge:color-mix(in srgb, var(--accent) 45%, #2a2d33)}
+.btn-museum>.face{background:#0a0c10;color:var(--ink)}
 .btn-accent{--edge:color-mix(in srgb, var(--accent) 70%, #333)}
 .btn-accent>.face{background:color-mix(in srgb, var(--accent) 14%, #0a0a0a);color:#fff}
 /* logo-only buttons (github repo, zenodo record, researchgate paper) */
@@ -216,29 +225,26 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .active-filter .x{width:22px;height:22px;display:grid;place-items:center;border:1px solid var(--line-2);color:var(--dim)}
 .active-filter .x:hover{border-color:var(--accent);color:var(--accent)}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px;padding-bottom:60px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:24px;padding-bottom:60px}
 
 .card{--cut:16px;--edge:#20242c;display:block;background:var(--edge);padding:1px;clip-path:var(--shape);
   transition:background .25s ease, filter .3s ease, transform .35s cubic-bezier(.2,.7,.2,1);will-change:transform}
 .card:hover{--edge:color-mix(in srgb, var(--accent) 80%, #333);transform:translateY(-4px);
   filter:drop-shadow(0 18px 44px color-mix(in srgb, var(--accent) 12%, rgba(0,0,0,.75)))}
 .card>.face{background:var(--panel);clip-path:var(--shape);position:relative;overflow:hidden;height:100%}
-.card-media{position:relative;aspect-ratio:16/10;overflow:hidden;isolation:isolate;
-  background:color-mix(in srgb,var(--accent) 12%, #07080b);border-bottom:1px solid rgba(255,255,255,.05)}
-/* duotone print: the work's own hue carries the shadows, so a dark UI reads as a
-   plate rather than a hole; the true screenshot returns on hover */
+.card-media{position:relative;aspect-ratio:4/3;overflow:hidden;isolation:isolate;
+  background:#0a0c10;border-bottom:1px solid rgba(255,255,255,.07)}
+/* the screenshot is shown as itself: full brightness, a touch of contrast so the
+   interface reads at a glance. The former dim duotone hid the work behind a wash */
 .card-media img{position:relative;z-index:0;width:100%;height:100%;object-fit:cover;object-position:top center;
-  filter:grayscale(1) contrast(1.1) brightness(.5);mix-blend-mode:normal;transform:scale(1.005);
-  transition:filter .45s ease, transform .9s cubic-bezier(.2,.7,.2,1), mix-blend-mode 0s .45s}
+  filter:contrast(1.07) saturate(1.06) brightness(1.04);transform:scale(1.005);
+  transition:filter .45s ease, transform .9s cubic-bezier(.2,.7,.2,1)}
 .card-media::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(115% 85% at 50% -12%, color-mix(in srgb,var(--accent) 22%, transparent), transparent 62%)}
-.card:hover .card-media img{filter:grayscale(0) contrast(1.02) brightness(1);mix-blend-mode:normal;transform:scale(1.045);
-  transition-delay:0s, 0s, 0s}
+  background:radial-gradient(115% 85% at 50% -12%, rgba(255,255,255,.10), transparent 62%)}
+.card:hover .card-media img{filter:contrast(1.04) saturate(1.02) brightness(1.08);transform:scale(1.045)}
 .card-media::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
-  background:linear-gradient(180deg, rgba(6,7,10,.12) 0%, transparent 34%, rgba(9,10,13,.72) 100%)}
-.card-media .scan{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:.5;
-  background:repeating-linear-gradient(180deg, rgba(255,255,255,.05) 0 1px, transparent 1px 4px);
-  mix-blend-mode:overlay}
+  background:linear-gradient(180deg, rgba(6,7,10,.06) 0%, transparent 30%, rgba(9,10,13,.62) 100%)}
+.card-media .scan{display:none}
 .card-media .idx{position:absolute;top:12px;left:14px;z-index:3;font-family:var(--mono);font-size:10px;letter-spacing:.18em;
   color:rgba(255,255,255,.6);background:rgba(6,7,10,.55);padding:3px 7px;border:1px solid rgba(255,255,255,.1)}
 .card-media .kind{position:absolute;top:12px;right:12px;z-index:3;font-family:var(--mono);font-size:9px;letter-spacing:.2em;
@@ -251,7 +257,12 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .card-body{padding:18px 18px 20px;display:flex;flex-direction:column;gap:12px}
 .card-top{display:flex;align-items:center;gap:11px;min-width:0}
 .card-logo{width:26px;height:26px;flex:none;opacity:.9}
-.card-title{font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-title{position:relative;padding-left:16px;font-family:var(--mono);font-size:19px;font-weight:500;
+  letter-spacing:.02em;text-transform:uppercase;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.card-title::before{content:"";position:absolute;left:0;top:calc(1.25em / 2 - 4px);width:8px;height:8px;
+  border:1px solid var(--accent);transform:rotate(45deg);opacity:.7;transition:background .25s ease,box-shadow .25s ease}
+.card:hover .card-title::before,.card:focus-visible .card-title::before{background:var(--accent);opacity:1;
+  box-shadow:0 0 12px rgba(255,255,255,.45)}
 .card-desc{color:var(--dim);font-size:13.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
 .ctag{--cut:5px;display:inline-flex;background:color-mix(in srgb, var(--h) 30%, #1a1a1a);padding:1px;clip-path:var(--shape-4)}
@@ -428,6 +439,19 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .about-card dd{margin-top:4px;font-size:13.5px;color:var(--ink);line-height:1.35}
 .about-note{color:#b9bec7;font-size:15px;line-height:1.7;max-width:82ch}
 .about-note a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+
+/* three-bubble reply: the quote walked as a conversation, each line stepping out
+   from the one before it, the third landing as the answer */
+.jack{display:grid;gap:10px;padding:4px 0;max-width:820px}
+.bub{position:relative;--cut:12px;width:fit-content;max-width:100%;padding:12px 20px;clip-path:var(--shape-4);
+  font-size:clamp(15px,1.8vw,20px);line-height:1.45;letter-spacing:-.01em;
+  animation:bub-in .55s cubic-bezier(.2,.7,.2,1) both}
+.bub::before{content:"";position:absolute;left:-9px;top:15px;width:10px;height:12px;background:inherit;
+  clip-path:polygon(100% 0,100% 100%,0 50%)}
+.b1{background:#12151b;color:var(--dim);animation-delay:.05s}
+.b2{background:#171b23;color:var(--ink);margin-left:clamp(18px,4vw,54px);animation-delay:.25s}
+.b3{background:var(--accent);color:#06070a;font-weight:600;margin-left:clamp(36px,8vw,108px);animation-delay:.45s}
+@keyframes bub-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .edu{display:grid;gap:1px;background:rgba(255,255,255,.075)}
 .edu-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr) auto;gap:16px;
   background:#0a0c11;padding:15px 17px;align-items:baseline}
@@ -567,14 +591,22 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 }
 @media (max-width:480px){
   /* five nav items plus the wordmark no longer fit — the mark carries the brand,
-     which frees enough width to bring Skills and About back. */
+     which frees enough width to bring Skills and About back. The centre column
+     takes the slack here, so the links sit evenly between the mark and the
+     museum button rather than being pulled to one side by the button's width. */
   .brand-word{display:none}
   .nav-link[data-nav="skills"],.nav-link[data-nav="about"]{display:inline}
-  .top{gap:10px;padding-inline:12px}
+  .top{gap:10px;padding-inline:12px;grid-template-columns:auto 1fr auto}
   .top-nav{gap:7px}
   .nav-link{font-size:10px;letter-spacing:.12em}
   .btn-museum>.face{padding:10px 12px;gap:6px}
   .btn-museum .arr{display:none}
+}
+@media (max-width:430px){
+  /* the last 50px: the five links only share a row with the mark and the museum
+     button once the tracking tightens — the labels stay whole, nothing wraps */
+  .top-nav{gap:5px}
+  .nav-link{font-size:9.5px;letter-spacing:.06em}
 }
 @media (max-width:360px){
   /* even at 10px the five links and the museum button do not share 320px */
