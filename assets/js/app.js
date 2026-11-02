@@ -621,8 +621,9 @@ const handle = u => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 const CHANNELS = [
   ['mail', 'Email', C.email_esi, `mailto:${C.email_esi}`],
   /* one row for the number — it is the same line for a call and for a chat, and
-     WhatsApp is the half that also answers on a desktop, so it owns the href */
-  ['chat', 'WhatsApp · phone', C.phone, WA],
+     WhatsApp is the half that also answers on a desktop, so it owns the href.
+     The row is named for the service, so it carries the service's own mark. */
+  ['brand:whatsapp', 'WhatsApp · phone', C.phone, WA],
 ];
 const SOCIALS = [
   ['brand:github', 'GitHub', handle(C.github), C.github],
