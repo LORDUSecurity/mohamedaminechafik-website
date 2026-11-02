@@ -24,7 +24,7 @@
     --ink: #ece9e2;
     --dim: #8d939d;
     --dimmer: #737a85;
-    --accent: #f2f4f7;
+    --accent: #ffd23f;
     --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
     --display: "Chakra Petch", Bahnschrift, "Segoe UI Variable Display", sans-serif;
   }
@@ -127,11 +127,11 @@
      parent's filter, so the glow traces the triangle rather than the square. */
   #cap .neon {
     position: absolute; inset: 0; pointer-events: none;
-    filter: drop-shadow(0 0 5px var(--hue, var(--accent)))
-            drop-shadow(0 0 18px color-mix(in srgb, var(--hue, var(--accent)) 70%, transparent));
+    filter: drop-shadow(0 0 5px var(--accent))
+            drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 70%, transparent));
   }
   #cap .neon i { position: absolute; width: var(--cut, 30px); height: var(--cut, 30px);
-    background: var(--hue, var(--accent)); }
+    background: var(--accent); }
   #cap .neon .c-tl { top: 0; left: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
   #cap .neon .c-tr { top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
   #cap .neon .c-br { bottom: 0; right: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
@@ -152,9 +152,9 @@
   #cap .logo {
     flex: none; width: 44px; height: 44px; padding: 6px;
     background: linear-gradient(160deg, var(--panel-2), var(--bg));
-    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--hue, var(--accent)) 85%, transparent);
-    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--hue, var(--accent)) 55%, transparent))
-            drop-shadow(0 0 22px color-mix(in srgb, var(--hue, var(--accent)) 28%, transparent)); }
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 85%, transparent);
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent))
+            drop-shadow(0 0 22px color-mix(in srgb, var(--accent) 28%, transparent)); }
   #cap .logo img { width: 100%; height: 100%; display: block; }
   /* a mark that is itself a tile fills the chip and takes its chamfer */
   #cap .logo.flat { padding: 0; }
@@ -341,12 +341,12 @@
   .btn-ico:hover svg{filter:drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 85%, transparent)) brightness(0)}
   .btn-ico:hover img{filter:brightness(0) drop-shadow(0 0 7px var(--accent))}
 
-  /* the framed output label: neutral, the same plate the portfolio's own output
-     badge uses — the work's colour stays on the mark, not on its metadata */
+  /* the framed output label: what the work actually is, in the work's colour */
   .out{display:inline-flex;align-items:center;padding:4px 9px;
-    border:1px solid rgba(255,255,255,.22);
+    border:1px solid color-mix(in srgb, var(--accent) 80%, transparent);
     font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
-    color:#fff;background:rgba(6,7,10,.45)}
+    color:color-mix(in srgb, var(--accent) 82%, white 18%);
+    box-shadow:0 0 12px color-mix(in srgb, var(--accent) 22%, transparent)}
 
   /* the door, top right: leave the gallery for the portfolio */
   #door{top:clamp(12px,2.4vh,22px);right:clamp(14px,3vw,34px);z-index:7;opacity:0;

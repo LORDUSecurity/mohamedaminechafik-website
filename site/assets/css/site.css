@@ -9,7 +9,7 @@
   --ink:#ece9e2;
   --dim:#8d939d;
   --dimmer:#737a85;
-  --accent:#f2f4f7;
+  --accent:#ffd23f;
   --mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --display:"Chakra Petch", Bahnschrift, "Segoe UI Variable Display", system-ui, sans-serif;
 
@@ -60,10 +60,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 body.fx-cursor .bg-cursor{opacity:1}
 .bg-glow{
   position:absolute;left:50%;top:-38vh;width:120vw;height:90vh;transform:translateX(-50%);
-  /* no white in the ambient wash: the header's backdrop blur would smear it into
-     a bar across the nav. The white light lives on the cursor layer instead */
+  /* the accent's own colour, never white: the header's backdrop blur smears a
+     white wash into a bar across the nav, and the white light has a layer of
+     its own now */
   background:
     radial-gradient(closest-side at 30% 40%, rgba(79,141,255,.14), transparent 70%),
+    radial-gradient(closest-side at 72% 30%, rgba(255,210,63,.10), transparent 70%),
     radial-gradient(closest-side at 50% 30%, rgba(255,69,58,.07), transparent 70%);
   filter:blur(20px);
 }
@@ -86,7 +88,7 @@ body.fx-cursor .bg-cursor{opacity:1}
 }
 .brand{display:flex;align-items:center;gap:13px;min-width:0;justify-self:start}
 .brand-mark{width:38px;height:38px;flex:none;object-fit:contain;
-  filter:drop-shadow(0 0 10px rgba(255,255,255,.4))}
+  filter:drop-shadow(0 0 10px rgba(255,210,63,.45))}
 /* the wordmark is one word read in two weights: the handle carries the emphasis,
    the suffix recedes so the pair still fits the bar without shrinking */
 .brand-word{display:flex;align-items:baseline;font-family:var(--display);font-size:15px;
@@ -117,8 +119,8 @@ body.fx-cursor .bg-cursor{opacity:1}
 .btn-ghost{--edge:#20252e}
 .btn-ghost>.face{background:transparent;color:var(--dim)}
 .btn-ghost:hover>.face{color:var(--ink)}
-.btn-museum{--edge:color-mix(in srgb, var(--accent) 45%, #2a2d33)}
-.btn-museum>.face{background:#0a0c10;color:var(--ink)}
+.btn-museum{--edge:color-mix(in srgb, var(--accent) 55%, #2a2a2a)}
+.btn-museum>.face{background:#0b0a06}
 .btn-accent{--edge:color-mix(in srgb, var(--accent) 70%, #333)}
 .btn-accent>.face{background:color-mix(in srgb, var(--accent) 14%, #0a0a0a);color:#fff}
 /* logo-only buttons (github repo, zenodo record, researchgate paper) */
