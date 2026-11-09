@@ -691,9 +691,9 @@ function renderAbout() {
     `</p>`;
   const convo = `
     <div class="jack" aria-label="Jack of all trades">
-      ${bub('me', 'b1', 'Jack of all trades,', '09:41', true)}
-      ${bub('them', 'b2', 'master of none,', '09:41')}
-      ${bub('me', 'b3', 'but oftentimes better than a master of one.', '09:43', true, { e: '💯', n: 100 })}
+      ${bub('me', 'b1', 'Jack of all trades', '09:41', true)}
+      ${bub('them', 'b2', 'master of none', '09:41')}
+      ${bub('me', 'b3', 'but oftentimes better than a master of one', '09:43', true, { e: '💯', n: 100 })}
     </div>`;
 
   app.innerHTML = `
