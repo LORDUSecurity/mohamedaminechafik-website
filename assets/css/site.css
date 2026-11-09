@@ -269,8 +269,8 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
    made the plate look dead, so the project colour comes back on its own layer:
    a blend of "color" takes hue and saturation from the accent and luminosity
    from everything under it, which means chroma rises while brightness does not
-   move. The light is a separate overlay wash from the top-left corner, and the
-   scrim stays where it was. Hover still gives colour, light and lift. */
+   move. The scrim stays where it was. Hover still gives colour, light and lift,
+   with the wash easing back so the screenshot's own colours take over. */
 .card-media img{position:relative;z-index:0;width:100%;height:100%;object-fit:cover;object-position:top center;
   filter:contrast(1.06) saturate(.5) brightness(.62);transform:scale(1.005);
   transition:filter .45s ease, transform .9s cubic-bezier(.2,.7,.2,1)}
@@ -280,8 +280,7 @@ h1.hero-title{font-size:clamp(40px,7.2vw,96px);line-height:.98;letter-spacing:-.
 .card-media::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
   background:linear-gradient(180deg, rgba(6,7,10,.28) 0%, rgba(6,7,10,.08) 34%, rgba(9,10,13,.78) 100%);
   transition:opacity .45s ease}
-.card-media .scan{position:absolute;inset:0;z-index:2;pointer-events:none;display:block;mix-blend-mode:overlay;
-  background:radial-gradient(95% 78% at 24% -12%, rgba(255,255,255,.42) 0%, rgba(255,255,255,.08) 46%, transparent 70%)}
+.card-media .scan{display:none}
 .card:hover .card-media img,.card:focus-visible .card-media img{filter:contrast(1.02) saturate(1.1) brightness(1.02);transform:scale(1.045)}
 .card:hover .card-media::after,.card:focus-visible .card-media::after{opacity:.55}
 .card:hover .card-media::before,.card:focus-visible .card-media::before{opacity:.3}
